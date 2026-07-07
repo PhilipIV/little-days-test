@@ -218,6 +218,13 @@
       font-size: .78rem;
       font-weight: 800;
     }
+    .nutrition-layout { display: grid; gap: 14px; grid-template-columns: 220px minmax(0, 1fr); align-items: center; }
+    .pie { width: 190px; height: 190px; border-radius: 50%; border: 1px solid var(--line); background: conic-gradient(var(--brand) 0 1deg, var(--soft) 1deg 360deg); box-shadow: inset 0 0 0 32px var(--card); margin: auto; }
+    .progress { height: 10px; background: rgba(34,48,45,.1); border-radius: 999px; overflow: hidden; }
+    .progress span { display:block; height:100%; background: var(--brand); border-radius: 999px; }
+    .milestone-status { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .milestone-status button { min-height: 34px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); }
+    .milestone-status button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
     .swatches { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
     .swatch {
       display: grid;
@@ -237,7 +244,7 @@
     @media (max-width: 850px) {
       header, .section-head, .calendar-tools { align-items: stretch; flex-direction: column; }
       .weather { min-width: 0; width: 100%; }
-      .grid, .home-grid, .fields, .calendar { grid-template-columns: 1fr; }
+      .grid, .home-grid, .fields, .calendar, .nutrition-layout { grid-template-columns: 1fr; }
       .hero { min-height: 240px; }
     }
   </style>
@@ -301,6 +308,11 @@
         <article class="card" style="margin-top:14px"><div class="card-head"><div><p class="eyebrow">Suggestions</p><h2>Schedule ideas for today</h2></div></div><div class="stack" id="kidIdeas"></div></article>
       </section>
 
+      <section class="view" id="milestones">
+        <div class="section-head"><div><p class="eyebrow">Development</p><h2>Age-based milestones</h2></div></div>
+        <div class="grid" id="milestoneList"></div>
+      </section>
+
       <section class="view" id="notes">
         <div class="section-head"><div><p class="eyebrow">Daily reminders</p><h2>Notes</h2></div><button class="btn primary" data-open="note" type="button">Add note</button></div>
         <div class="stack" id="noteList"></div>
@@ -309,14 +321,26 @@
       <section class="view" id="health">
         <div class="section-head"><div><p class="eyebrow">Overall health</p><h2>Age, health, weight, size</h2></div></div>
         <div class="grid" id="healthList"></div>
+        <div class="grid" style="margin-top:14px">
+          <article class="card"><div class="card-head"><h2>Growth history</h2><button class="btn primary" data-open="growth" type="button">Add growth</button></div><div class="stack" id="growthList"></div></article>
+          <article class="card"><div class="card-head"><h2>Appointments</h2><button class="btn primary" data-open="appointment" type="button">Add appointment</button></div><div class="stack" id="appointmentList"></div></article>
+        </div>
       </section>
 
       <section class="view" id="food">
         <div class="section-head"><div><p class="eyebrow">Food tracker</p><h2>Food, breast milk, macros</h2></div><button class="btn primary" data-open="food" type="button">Add intake</button></div>
+        <article class="card" style="margin-bottom:14px">
+          <div class="card-head"><div><p class="eyebrow">Food groups</p><h2>Today's nutrition balance</h2></div><span class="pill" id="foodGroupSummary"></span></div>
+          <div class="nutrition-layout">
+            <div class="pie" id="foodPie"></div>
+            <div class="stack" id="foodGroupList"></div>
+          </div>
+        </article>
         <div class="grid">
           <article class="card"><div class="card-head"><h2>Today</h2><span class="pill" id="macroTotal"></span></div><div class="stack" id="foodList"></div></article>
           <article class="card"><div class="card-head"><h2>Recommended macro guide</h2><span class="pill">By age</span></div><div class="stack" id="macroGuide"></div></article>
         </div>
+        <article class="card" style="margin-top:14px"><div class="card-head"><div><p class="eyebrow">Daily recipes</p><h2>Meal and snack ideas</h2></div></div><div class="stack" id="recipeIdeas"></div></article>
       </section>
 
       <section class="view" id="calendar">
@@ -358,7 +382,7 @@
   <script>
     const KEY = "littleDays.v2";
     const WEATHER = "https://api.open-meteo.com/v1/forecast?latitude=49.8951&longitude=-97.1384&current=temperature_2m,precipitation,weather_code,wind_speed_10m&timezone=America%2FWinnipeg";
-    const tabs = [["home","Home"],["kids","Kids"],["notes","Notes"],["health","Health"],["food","Food"],["calendar","Calendar"],["settings","Settings"]];
+    const tabs = [["home","Home"],["kids","Kids"],["milestones","Milestones"],["notes","Notes"],["health","Health"],["food","Food"],["calendar","Calendar"],["settings","Settings"]];
     const themes = {
       meadow: ["Meadow","#f6f3ee","#ffffff","#edf7f4","#22302d","#2f8f83","#f28b6d","#3b76af"],
       sky: ["Sky","#f2f7fb","#ffffff","#e7f0f8","#1f3140","#3178b9","#71a86d","#d56f5d"],
@@ -371,6 +395,52 @@
       ["1-3 years","13 g/day","130 g/day","30-40% of calories","Offer frequent small meals and snacks."],
       ["4-8 years","19 g/day","130 g/day","25-35% of calories","Balance protein, grains, fruit, vegetables, dairy or alternatives."]
     ];
+    const foodGroups = [
+      ["fruit","Fruits","#f28b6d"],["vegetables","Vegetables","#4b927f"],["grains","Grains","#d2a34a"],["protein","Protein","#a33e67"],["dairy","Dairy / milk / formula","#3b76af"],["fats","Fats","#8a6fbe"],["water","Water","#53a7c8"]
+    ];
+    const foodTargets = {
+      baby:{label:"Baby", fruit:1, vegetables:1, grains:1, protein:1, dairy:4, fats:1, water:0},
+      toddler:{label:"Toddler", fruit:2, vegetables:2, grains:3, protein:2, dairy:2, fats:1, water:3},
+      child:{label:"Child", fruit:2, vegetables:2, grains:4, protein:2, dairy:2, fats:1, water:4}
+    };
+    const milestoneBank = [
+      {min:0,max:5,cat:"Physical",text:"Lifts head, brings hands to mouth, begins rolling"},
+      {min:0,max:5,cat:"Speech/language",text:"Coos, turns toward familiar voices, cries differently for needs"},
+      {min:0,max:5,cat:"Cognitive",text:"Watches faces, follows objects, shows interest in people"},
+      {min:0,max:5,cat:"Social",text:"Smiles responsively and calms with caregiver support"},
+      {min:0,max:5,cat:"Emotional",text:"Shows comfort, distress, and early self-soothing"},
+      {min:0,max:5,cat:"Self-care",text:"Begins feeding rhythm with caregiver support"},
+      {min:6,max:11,cat:"Physical",text:"Sits with support, rolls, reaches, may crawl or pull up"},
+      {min:6,max:11,cat:"Speech/language",text:"Babbles, responds to name, uses gestures"},
+      {min:6,max:11,cat:"Cognitive",text:"Explores objects, looks for hidden items, copies simple actions"},
+      {min:6,max:11,cat:"Social",text:"Shows preference for familiar people and plays simple games"},
+      {min:6,max:11,cat:"Emotional",text:"Shows stranger awareness and seeks comfort"},
+      {min:6,max:11,cat:"Self-care",text:"Tries finger foods and drinks with help"},
+      {min:12,max:23,cat:"Physical",text:"Walks, climbs, stacks blocks, begins running"},
+      {min:12,max:23,cat:"Speech/language",text:"Uses first words, points, follows simple directions"},
+      {min:12,max:23,cat:"Cognitive",text:"Pretend play begins, sorts shapes, solves simple problems"},
+      {min:12,max:23,cat:"Social",text:"Imitates adults and plays near other children"},
+      {min:12,max:23,cat:"Emotional",text:"Shows independence, preferences, and separation feelings"},
+      {min:12,max:23,cat:"Self-care",text:"Helps with dressing, uses spoon with spills"},
+      {min:24,max:35,cat:"Physical",text:"Runs, jumps, kicks ball, turns pages"},
+      {min:24,max:35,cat:"Speech/language",text:"Uses 2-4 word phrases and names familiar things"},
+      {min:24,max:35,cat:"Cognitive",text:"Matches shapes/colors and follows two-step directions"},
+      {min:24,max:35,cat:"Social",text:"Parallel play, early sharing, copies routines"},
+      {min:24,max:35,cat:"Emotional",text:"Names feelings with help and recovers from frustration"},
+      {min:24,max:35,cat:"Self-care",text:"Toilet learning signs, washes hands with help"},
+      {min:36,max:59,cat:"Physical",text:"Pedals, hops, draws simple shapes, uses child scissors"},
+      {min:36,max:59,cat:"Speech/language",text:"Tells stories, asks questions, speaks clearly enough for familiar adults"},
+      {min:36,max:59,cat:"Cognitive",text:"Counts, understands routines, sorts and compares"},
+      {min:36,max:59,cat:"Social",text:"Cooperative play, turn-taking, pretend roles"},
+      {min:36,max:59,cat:"Emotional",text:"Uses words for feelings and manages transitions with support"},
+      {min:36,max:59,cat:"Self-care",text:"Dresses with help, brushes teeth with help, toileting progress"},
+      {min:60,max:120,cat:"Physical",text:"Improves balance, coordination, handwriting, and sport/play skills"},
+      {min:60,max:120,cat:"Speech/language",text:"Explains ideas, follows multi-step directions, grows vocabulary"},
+      {min:60,max:120,cat:"Cognitive",text:"Reads/counts at level, plans tasks, solves multi-step problems"},
+      {min:60,max:120,cat:"Social",text:"Friendships, teamwork, empathy, conflict repair"},
+      {min:60,max:120,cat:"Emotional",text:"Identifies feelings, uses coping strategies, builds confidence"},
+      {min:60,max:120,cat:"Self-care",text:"More independent hygiene, dressing, chores, and routines"}
+    ];
     const defaultState = {
       active:"home",
       month:new Date().toISOString().slice(0,7),
@@ -378,11 +448,14 @@
       weather:null,
       photoIndex:0,
       photos:[],
-      settings:{ theme:"meadow", fontSize:16, tabs:{home:true,kids:true,notes:true,health:true,food:true,calendar:true,settings:true}, order:["photos","needs","ideas","reminders"] },
+      settings:{ theme:"meadow", fontSize:16, tabs:{home:true,kids:true,milestones:true,notes:true,health:true,food:true,calendar:true,settings:true}, tabOrder:["home","kids","milestones","notes","health","food","calendar","settings"], order:["photos","needs","ideas","reminders"] },
       kids:[{id:id(),name:"Child 1",birthday:"2023-07-07",weight:"",height:"",health:"No notes yet",care:"Nap, sunscreen, water bottle",activities:"Outdoor walk or indoor play",learning:"Read together and practice colors",needs:[{id:id(),text:"Morning care",done:false},{id:id(),text:"Quiet rest",done:false}]}],
       notes:[{id:id(),title:"Daily reminder",date:today(),text:"Pack snacks, diapers, wipes, and water.",done:false}],
       food:[],
-      events:[]
+      events:[],
+      milestones:{},
+      growth:[],
+      appointments:[]
     };
     let state = load();
     let dragCard = null;
@@ -410,14 +483,20 @@
       renderTabs();
       renderHome();
       renderKids();
+      renderMilestones();
       renderNotes();
       renderHealth();
       renderFood();
       renderCalendar();
       renderSettings();
     }
+    function orderedTabs(){
+      const map = Object.fromEntries(tabs);
+      const order = state.settings.tabOrder || tabs.map(([k])=>k);
+      return order.filter(k => map[k]).map(k => [k, map[k]]).concat(tabs.filter(([k]) => !order.includes(k)));
+    }
     function renderTabs(){
-      $("#tabs").innerHTML = tabs.filter(([k]) => state.settings.tabs[k] || k === "settings").map(([k,l]) => `<button type="button" class="${state.active===k?'active':''}" data-tab="${k}">${l}</button>`).join("");
+      $("#tabs").innerHTML = orderedTabs().filter(([k]) => state.settings.tabs[k] || k === "settings").map(([k,l]) => `<button type="button" class="${state.active===k?'active':''}" data-tab="${k}">${l}</button>`).join("");
       $$(".view").forEach(v => v.classList.toggle("active", v.id === state.active));
     }
     function renderHome(){
@@ -467,6 +546,17 @@
         ["Quiet close", "Snack, hygiene check, calm music or books, then note anything important for tomorrow."]
       ].map(([h,t]) => `<div class="idea"><strong>${h}</strong><p class="muted">${t}</p></div>`).join("");
     }
+    function renderMilestones(){
+      $("#milestoneList").innerHTML = state.kids.map(k => {
+        const months = ageMonths(k.birthday);
+        const items = milestoneBank.filter(m => months >= m.min && months <= m.max);
+        return `<article class="card"><div class="card-head"><div><p class="eyebrow">${age(k.birthday)}</p><h2>${esc(k.name)}</h2></div><span class="pill">${items.length} expected</span></div><div class="stack">${items.map(m => {
+          const key = `${k.id}|${m.cat}|${m.text}`;
+          const value = state.milestones[key] || "not started";
+          return `<div class="item"><div><strong>${m.cat}</strong><p>${esc(m.text)}</p></div><div class="milestone-status">${["not started","emerging","achieved","concern"].map(s => `<button type="button" class="${value===s?"active":""}" data-milestone="${esc(key)}" data-status="${s}">${s}</button>`).join("")}</div></div>`;
+        }).join("")}</div></article>`;
+      }).join("") || `<p class="muted">Add a child to see milestones.</p>`;
+    }
     function renderNotes(){
       $("#noteList").innerHTML = state.notes.map(n => `<article class="item">
         <div class="row"><strong>${esc(n.title)}</strong><button class="btn ghost danger" data-del-note="${n.id}" type="button">Remove</button></div>
@@ -486,14 +576,33 @@
           <label class="field"><span>Health notes</span><textarea data-kid="${k.id}:health">${esc(k.health)}</textarea></label>
         </div>
       </article>`).join("") || `<p class="muted">Add children in Kids.</p>`;
+      $("#growthList").innerHTML = state.growth.map(g => `<article class="item"><div class="row"><strong>${esc(g.child || "Child")}</strong><button class="btn ghost danger" data-del-growth="${g.id}" type="button">Remove</button></div><p class="muted">${esc(g.date)} | ${esc(g.weight)} | ${esc(g.height)}</p><p>${esc(g.notes || "")}</p></article>`).join("") || `<p class="muted">No growth entries yet.</p>`;
+      $("#appointmentList").innerHTML = state.appointments.map(a => `<article class="item"><div class="row"><strong>${esc(a.title || "Appointment")}</strong><button class="btn ghost danger" data-del-appointment="${a.id}" type="button">Remove</button></div><p class="muted">${esc(a.date)} ${esc(a.time || "")} | ${esc(a.child || "All kids")}</p><p>${esc(a.notes || "")}</p></article>`).join("") || `<p class="muted">No appointments yet.</p>`;
     }
     function renderFood(){
-      const totals = state.food.filter(f => f.date === today()).reduce((a,f) => {
+      const todaysFood = state.food.filter(f => f.date === today());
+      const totals = todaysFood.reduce((a,f) => {
         a.p += +f.protein || 0; a.c += +f.carbs || 0; a.f += +f.fat || 0; a.cal += +f.calories || 0; return a;
       }, {p:0,c:0,f:0,cal:0});
       $("#macroTotal").textContent = `${totals.cal} cal | P ${totals.p}g C ${totals.c}g F ${totals.f}g`;
-      $("#foodList").innerHTML = state.food.map(f => `<article class="item"><div class="row"><strong>${esc(f.child || "All kids")} - ${esc(f.food)}</strong><button class="btn ghost danger" data-del-food="${f.id}" type="button">Remove</button></div><p class="muted">${esc(f.date)} | ${esc(f.amount)} | ${esc(f.type)}</p><p>Protein ${f.protein||0}g, Carbs ${f.carbs||0}g, Fat ${f.fat||0}g, Calories ${f.calories||0}</p></article>`).join("") || `<p class="muted">No intake logged yet.</p>`;
+      const target = groupTargetForSelectedKid();
+      const actual = foodGroups.reduce((acc,[key]) => (acc[key] = todaysFood.reduce((n,f)=>n+(+f[key]||0),0), acc), {});
+      const segments = [];
+      let start = 0;
+      const totalServings = foodGroups.reduce((n,[key])=>n+actual[key],0) || 1;
+      foodGroups.forEach(([key,label,color]) => { const size = actual[key] / totalServings * 360; segments.push(`${color} ${start}deg ${start+size}deg`); start += size; });
+      $("#foodPie").style.background = `conic-gradient(${segments.join(",")})`;
+      const complete = foodGroups.filter(([key]) => actual[key] >= (target[key] || 0)).length;
+      $("#foodGroupSummary").textContent = `${complete}/${foodGroups.length} groups on track`;
+      $("#foodGroupList").innerHTML = foodGroups.map(([key,label]) => {
+        const goal = target[key] || 0;
+        const amount = actual[key] || 0;
+        const pct = goal ? Math.min(100, Math.round(amount / goal * 100)) : 100;
+        return `<div class="item"><div class="row"><strong>${label}</strong><span class="pill">${amount}/${goal || "as needed"}</span></div><div class="progress"><span style="width:${pct}%"></span></div></div>`;
+      }).join("");
+      $("#foodList").innerHTML = state.food.map(f => `<article class="item"><div class="row"><strong>${esc(f.child || "All kids")} - ${esc(f.food)}</strong><button class="btn ghost danger" data-del-food="${f.id}" type="button">Remove</button></div><p class="muted">${esc(f.date)} | ${esc(f.amount)} | ${esc(f.type)}</p><p>Protein ${f.protein||0}g, Carbs ${f.carbs||0}g, Fat ${f.fat||0}g, Calories ${f.calories||0}</p><p class="muted">Groups: fruit ${f.fruit||0}, veg ${f.vegetables||0}, grains ${f.grains||0}, protein ${f.proteinFood||0}, dairy ${f.dairy||0}, water ${f.water||0}</p></article>`).join("") || `<p class="muted">No intake logged yet.</p>`;
       $("#macroGuide").innerHTML = macroGuide.map(g => `<div class="macro-card"><strong>${g[0]}</strong><p class="muted">Protein: ${g[1]}</p><p class="muted">Carbs: ${g[2]}</p><p class="muted">Fat: ${g[3]}</p><p>${g[4]}</p></div>`).join("");
+      $("#recipeIdeas").innerHTML = recipeIdeas(todaysFood, target, actual).map(r => `<div class="idea"><strong>${r[0]}</strong><p class="muted">${r[1]}</p></div>`).join("");
     }
     function renderCalendar(){
       const [y,m] = state.month.split("-").map(Number);
@@ -503,22 +612,42 @@
       const days = daysFor(date, state.mode);
       $("#calendarGrid").innerHTML = days.map(d => {
         const iso = d.toISOString().slice(0,10);
-        const events = state.events.filter(e => e.date === iso);
+        const events = eventsForDate(iso);
         return `<div class="day"><strong>${d.toLocaleDateString("en-CA",{weekday:"short",month:"short",day:"numeric"})}</strong>${events.map(e => `<div class="event-dot">${esc(e.time||"")} ${esc(e.title)}</div>`).join("")}</div>`;
       }).join("");
-      const monthEvents = state.events.filter(e => e.date.startsWith(state.month)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+      const monthEvents = state.events.filter(e => e.date.startsWith(state.month) || recurringInMonth(e, state.month)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
       $("#eventCount").textContent = `${monthEvents.length} scheduled`;
       $("#eventList").innerHTML = monthEvents.map(e => `<article class="item"><div class="row"><strong>${esc(e.title)}</strong><button class="btn ghost danger" data-del-event="${e.id}" type="button">Remove</button></div><p class="muted">${esc(e.date)} ${esc(e.time||"")} | ${esc(e.type||"Activity")}</p><p>${esc(e.notes||"")}</p></article>`).join("") || `<p class="muted">No events this month.</p>`;
     }
     function renderSettings(){
       $("#fontSize").value = state.settings.fontSize;
       $("#themes").innerHTML = Object.entries(themes).map(([k,t]) => `<button class="swatch ${state.settings.theme===k?'active':''}" data-theme="${k}" type="button"><span style="background:linear-gradient(90deg,${t[5]},${t[6]},${t[7]})"></span><strong>${t[0]}</strong></button>`).join("");
-      $("#tabSettings").innerHTML = tabs.filter(([k]) => k !== "settings").map(([k,l]) => `<label class="item row"><span>${l}</span><input type="checkbox" data-tab-toggle="${k}" ${state.settings.tabs[k]?'checked':''}></label>`).join("");
+      $("#tabSettings").innerHTML = orderedTabs().filter(([k]) => k !== "settings").map(([k,l]) => `<div class="item row"><label><span>${l}</span> <input type="checkbox" data-tab-toggle="${k}" ${state.settings.tabs[k]?'checked':''}></label><span><button class="btn ghost" data-tab-move="${k}:up" type="button">Up</button> <button class="btn ghost" data-tab-move="${k}:down" type="button">Down</button></span></div>`).join("");
     }
     function daysFor(date, mode){
       if (mode === "day") return [new Date()];
       if (mode === "week") { const s = new Date(); s.setDate(s.getDate() - s.getDay()); return Array.from({length:7},(_,i)=>new Date(s.getFullYear(),s.getMonth(),s.getDate()+i)); }
       return Array.from({length:new Date(date.getFullYear(), date.getMonth()+1, 0).getDate()},(_,i)=>new Date(date.getFullYear(),date.getMonth(),i+1));
+    }
+    function eventsForDate(iso){
+      return state.events.filter(e => eventOccursOn(e, iso)).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+    }
+    function eventOccursOn(event, iso){
+      if (!event.date || event.date > iso) return false;
+      if (event.date === iso) return true;
+      const start = new Date(`${event.date}T00:00:00`);
+      const day = new Date(`${iso}T00:00:00`);
+      if (Number.isNaN(start) || Number.isNaN(day)) return false;
+      if (event.recurring === "Daily") return true;
+      if (event.recurring === "Weekly") return start.getDay() === day.getDay();
+      if (event.recurring === "Monthly") return start.getDate() === day.getDate();
+      return false;
+    }
+    function recurringInMonth(event, month){
+      if (!event.recurring || !event.date || event.date.slice(0,7) > month) return false;
+      const [year, monthNumber] = month.split("-").map(Number);
+      const days = new Date(year, monthNumber, 0).getDate();
+      return Array.from({length:days},(_,i)=>`${month}-${String(i+1).padStart(2,"0")}`).some(iso => eventOccursOn(event, iso));
     }
     function age(birthday){
       const b = new Date(birthday); if (Number.isNaN(b)) return "Age not set";
@@ -527,6 +656,35 @@
     }
     function ageMonths(birthday){ const b = new Date(birthday); if (Number.isNaN(b)) return 36; const n = new Date(); return Math.max(0, (n.getFullYear()-b.getFullYear())*12+n.getMonth()-b.getMonth()); }
     function averageMonths(){ return state.kids.length ? state.kids.reduce((a,k)=>a+ageMonths(k.birthday),0)/state.kids.length : 36; }
+    function groupTargetForSelectedKid(){
+      const childName = state.food.find(f => f.date === today() && f.child)?.child;
+      const kid = state.kids.find(k => k.name === childName) || state.kids[0];
+      const months = kid ? ageMonths(kid.birthday) : 36;
+      if (months < 12) return foodTargets.baby;
+      if (months < 48) return foodTargets.toddler;
+      return foodTargets.child;
+    }
+    function recipeIdeas(todaysFood, target, actual){
+      const hour = new Date().getHours();
+      const gap = foodGroups.filter(([key]) => (actual[key]||0) < (target[key]||0)).map(([key,label]) => key);
+      const daySeed = new Date().toISOString().slice(0,10).split("-").reduce((n,x)=>n+(+x),0);
+      const baby = target.label === "Baby";
+      const bank = baby ? [
+        ["Soft banana oat mash","Good for fruit/grain gaps; serve texture appropriate for age."],
+        ["Avocado yogurt swirl","Adds fats and dairy-style nutrition where appropriate."],
+        ["Lentil veggie puree","A gentle protein and vegetable option for babies already eating solids."]
+      ] : [
+        ["Banana pancakes","Good for fruit and grain gaps; add yogurt if dairy is low."],
+        ["Veggie egg muffins","Helps with vegetables and protein, easy for snacks or lunch."],
+        ["Turkey or lentil pasta","Family-friendly dinner with protein, grains, and vegetables."],
+        ["Greek yogurt berry bowl","Quick snack for dairy and fruit."],
+        ["Hummus toast strips","Simple protein/grain snack with soft vegetables on the side."],
+        ["Mini quesadilla with avocado","Good for grains, dairy, fats, and protein."]
+      ];
+      const picked = bank.slice(daySeed % bank.length).concat(bank).slice(0,3);
+      const time = hour < 11 ? "Breakfast idea" : hour < 15 ? "Lunch/snack idea" : "Dinner idea";
+      return picked.map((r,i) => [i===0 ? time + ": " + r[0] : r[0], `${r[1]} Today's gaps: ${gap.length ? gap.join(", ") : "mostly on track"}.`]);
+    }
     async function fetchWeather(){
       try {
         const res = await fetch(WEATHER);
@@ -548,8 +706,10 @@
       const fields = {
         kid:[["name","Name","text"],["birthday","Birthday","date"]],
         note:[["title","Title","text"],["date","Date","date"],["text","Note","textarea"]],
-        food:[["child","Child","kidselect"],["date","Date","date"],["type","Type","foodtype"],["food","Food or milk","text"],["amount","Amount","text"],["protein","Protein g","number"],["carbs","Carbs g","number"],["fat","Fat g","number"],["calories","Calories","number"]],
-        event:[["title","Title","text"],["date","Date","date"],["time","Time","time"],["type","Type","text"],["notes","Notes","textarea"]]
+        food:[["child","Child","kidselect"],["date","Date","date"],["type","Type","foodtype"],["food","Food or milk","text"],["amount","Amount","text"],["fruit","Fruit servings","number"],["vegetables","Vegetable servings","number"],["grains","Grain servings","number"],["proteinFood","Protein servings","number"],["dairy","Dairy / milk / formula servings","number"],["fats","Fat servings","number"],["water","Water servings/cups","number"],["protein","Protein g","number"],["carbs","Carbs g","number"],["fat","Fat g","number"],["calories","Calories","number"]],
+        event:[["title","Title","text"],["date","Date","date"],["time","Time","time"],["type","Type","text"],["recurring","Recurring","recurring"],["notes","Notes","textarea"]],
+        growth:[["child","Child","kidselect"],["date","Date","date"],["weight","Weight","text"],["height","Height / size","text"],["notes","Notes","textarea"]],
+        appointment:[["child","Child","kidselect"],["title","Title","text"],["date","Date","date"],["time","Time","time"],["notes","Notes","textarea"]]
       };
       $("#dialog").dataset.type = type;
       $("#dialogTitle").textContent = `Add ${type}`;
@@ -560,7 +720,8 @@
       const v = ["date","birthday"].includes(name) ? today() : "";
       if (type === "textarea") return `<label class="field"><span>${label}</span><textarea name="${name}"></textarea></label>`;
       if (type === "kidselect") return `<label class="field"><span>${label}</span><select name="${name}"><option value="">All kids</option>${state.kids.map(k=>`<option>${esc(k.name)}</option>`).join("")}</select></label>`;
-      if (type === "foodtype") return `<label class="field"><span>${label}</span><select name="${name}"><option>Food</option><option>Breast milk</option><option>Formula</option><option>Snack</option></select></label>`;
+      if (type === "foodtype") return `<label class="field"><span>${label}</span><select name="${name}"><option>Food</option><option>Breast milk</option><option>Formula</option><option>Snack</option><option>Water</option></select></label>`;
+      if (type === "recurring") return `<label class="field"><span>${label}</span><select name="${name}"><option value="">None</option><option>Daily</option><option>Weekly</option><option>Monthly</option></select></label>`;
       return `<label class="field"><span>${label}</span><input name="${name}" type="${type}" value="${v}"></label>`;
     }
     function saveDialog(form){
@@ -570,6 +731,8 @@
       if (type === "note") state.notes.unshift({id:id(), title:data.title||"Reminder", date:data.date||today(), text:data.text||"", done:false});
       if (type === "food") state.food.unshift({id:id(), ...data});
       if (type === "event") state.events.push({id:id(), ...data});
+      if (type === "growth") state.growth.unshift({id:id(), ...data});
+      if (type === "appointment") state.appointments.unshift({id:id(), ...data});
       save(); render();
     }
     document.addEventListener("click", e => {
@@ -591,6 +754,20 @@
         state.settings.theme = theme.dataset.theme;
         changed = true;
       }
+      const tabMove = e.target.closest("[data-tab-move]");
+      if (tabMove) {
+        const [key, dir] = tabMove.dataset.tabMove.split(":");
+        const order = state.settings.tabOrder || tabs.map(([k])=>k);
+        const current = order.indexOf(key);
+        const swap = dir === "up" ? current - 1 : current + 1;
+        const settingsIndex = order.indexOf("settings");
+        if (current > -1 && swap > -1 && (settingsIndex === -1 || swap < settingsIndex)) {
+          const item = order.splice(current, 1)[0];
+          order.splice(swap, 0, item);
+          state.settings.tabOrder = order;
+          changed = true;
+        }
+      }
       const delKid = e.target.closest("[data-del-kid]");
       if (delKid) {
         state.kids = state.kids.filter(k=>k.id!==delKid.dataset.delKid);
@@ -604,6 +781,21 @@
       const delFood = e.target.closest("[data-del-food]");
       if (delFood) {
         state.food = state.food.filter(f=>f.id!==delFood.dataset.delFood);
+        changed = true;
+      }
+      const milestone = e.target.closest("[data-milestone]");
+      if (milestone) {
+        state.milestones[milestone.dataset.milestone] = milestone.dataset.status;
+        changed = true;
+      }
+      const delGrowth = e.target.closest("[data-del-growth]");
+      if (delGrowth) {
+        state.growth = state.growth.filter(g=>g.id!==delGrowth.dataset.delGrowth);
+        changed = true;
+      }
+      const delAppointment = e.target.closest("[data-del-appointment]");
+      if (delAppointment) {
+        state.appointments = state.appointments.filter(a=>a.id!==delAppointment.dataset.delAppointment);
         changed = true;
       }
       const delEvent = e.target.closest("[data-del-event]");
