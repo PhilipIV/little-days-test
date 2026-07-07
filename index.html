@@ -200,9 +200,11 @@
     }
     .photo-actions {
       position: absolute;
-      top: 12px;
+      top: 76px;
+      left: 12px;
       right: 12px;
-      display: flex;
+      display: none;
+      justify-content: flex-start;
       gap: 8px;
       z-index: 2;
     }
@@ -213,6 +215,7 @@
       left: 12px;
       bottom: 12px;
       z-index: 2;
+      display: none;
       max-width: calc(100% - 24px);
       background: rgba(255,255,255,.88);
       border: 1px solid rgba(255,255,255,.9);
@@ -227,7 +230,7 @@
       left: 12px;
       top: 12px;
       z-index: 2;
-      display: flex;
+      display: none;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
@@ -247,6 +250,8 @@
       min-width: 36px;
       padding: 4px 8px;
     }
+    .dragging .photo-actions, .dragging .resize-tools { display: flex; }
+    .dragging .photo-status { display: block; }
     .calendar-tools {
       display: flex;
       align-items: center;
@@ -1157,7 +1162,10 @@
       if (e.target.dataset.color) {
         state.settings.theme = "custom";
         state.settings.customColors[e.target.dataset.color] = e.target.value;
-        rerender = true;
+        save();
+        applyTheme();
+        $$("#themes .swatch").forEach(b => b.classList.toggle("active", b.dataset.theme === "custom"));
+        return;
       }
       if (e.target.id === "fontSize") {
         state.settings.fontSize = +e.target.value;
