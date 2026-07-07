@@ -222,6 +222,31 @@
       font-size: .82rem;
       font-weight: 800;
     }
+    .resize-tools {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: calc(100% - 24px);
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: var(--radius);
+      padding: 6px;
+    }
+    .resize-tools input {
+      width: min(190px, 42vw);
+      min-height: 32px;
+      padding: 0;
+    }
+    .resize-tools .icon {
+      min-height: 32px;
+      min-width: 36px;
+      padding: 4px 8px;
+    }
     .calendar-tools {
       display: flex;
       align-items: center;
@@ -284,7 +309,7 @@
       header, .section-head, .calendar-tools { align-items: stretch; flex-direction: column; }
       .weather { min-width: 0; width: 100%; }
       .grid, .home-grid, .fields, .calendar, .nutrition-layout { grid-template-columns: 1fr; }
-      .hero { min-height: 240px; }
+      .hero { min-height: max(240px, var(--hero-height)); }
     }
   </style>
 </head>
@@ -315,6 +340,11 @@
               <button class="btn ghost" id="moveMode" type="button">Move</button>
             </div>
             <div class="hero" id="hero">
+              <div class="resize-tools">
+                <button class="icon" id="slideSmaller" type="button" title="Make slideshow smaller">-</button>
+                <input id="slideSize" type="range" min="220" max="620" step="20" aria-label="Slideshow size">
+                <button class="icon" id="slideLarger" type="button" title="Make slideshow larger">+</button>
+              </div>
               <div class="photo-actions">
                 <label class="btn ghost">Photo library<input id="photoLibraryInput" type="file" accept="image/*,.heic,.heif" multiple></label>
                 <label class="btn ghost">Files<input id="photoFileInput" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></label>
@@ -704,6 +734,7 @@
       state.settings.order.forEach(p => { const el = $(`[data-panel="${p}"]`); if (el) $("#homeGrid").append(el); });
       const hero = $("#hero");
       hero.querySelectorAll("img").forEach(i => i.remove());
+      $("#slideSize").value = state.settings.photoHeight || 320;
       renderPhoto();
       $("#photoStatus").textContent = state.photos.length ? `${state.photos.length} photo${state.photos.length===1?"":"s"} saved` : "No photos saved yet";
       const needs = state.kids.flatMap(k => k.needs.map(n => ({kid:k.name, ...n, kidId:k.id}))).filter(n => state.settings.showCompleted || !n.done);
@@ -844,7 +875,7 @@
         selectSetting("tabStyle","Tab style",[["pills","Pills"],["underline","Underline"]]),
         selectSetting("contrast","Contrast",[["normal","Normal"],["high","High"]]),
         selectSetting("pageWidth","Page width",[["focused","Focused"],["wide","Wide"],["full","Full"]]),
-        rangeSetting("photoHeight","Photo height",220,460,20,"px")
+        rangeSetting("photoHeight","Photo height",220,620,20,"px")
       ].join("");
       $("#displaySettings").innerHTML = [
         selectSetting("homeLayout","Home layout",[["balanced","Balanced"],["photos","Photo focus"],["checklist","Checklist focus"]]),
@@ -1080,6 +1111,11 @@
         state.photoIndex = (state.photoIndex + 1) % state.photos.length;
         changed = true;
       }
+      if (e.target.id === "slideSmaller" || e.target.id === "slideLarger") {
+        const delta = e.target.id === "slideLarger" ? 40 : -40;
+        state.settings.photoHeight = Math.max(220, Math.min(620, +(state.settings.photoHeight || 320) + delta));
+        changed = true;
+      }
       if (e.target.id === "moveMode") {
         const on = !$("#homeGrid").classList.contains("dragging");
         $("#homeGrid").classList.toggle("dragging", on);
@@ -1125,6 +1161,10 @@
       }
       if (e.target.id === "fontSize") {
         state.settings.fontSize = +e.target.value;
+        rerender = true;
+      }
+      if (e.target.id === "slideSize") {
+        state.settings.photoHeight = +e.target.value;
         rerender = true;
       }
       if (e.target.id === "calendarMode") {
