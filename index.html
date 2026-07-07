@@ -18,6 +18,1001 @@
       --danger: #b84b4b;
       --shadow: 0 12px 30px rgba(34, 48, 45, .12);
       --font-size: 16px;
+      --radius: 8px;
+      --pad: 16px;
+      --gap: 14px;
+      --control: 40px;
+      --hero-height: 320px;
+      --texture: transparent;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--texture), var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: var(--font-size);
+    }
+    body[data-font="round"] { font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif; }
+    body[data-font="calm"] { font-family: Georgia, "Times New Roman", serif; }
+    body[data-tabs="underline"] nav button { border-color: transparent; border-radius: 0; background: transparent; border-bottom: 3px solid transparent; }
+    body[data-tabs="underline"] nav button.active { color: var(--brand); background: transparent; border-bottom-color: var(--brand); }
+    body[data-contrast="high"] { --muted: color-mix(in srgb, var(--text) 76%, white); --line: color-mix(in srgb, var(--text) 35%, white); }
+    body[data-detail="simple"] .optional-detail { display: none; }
+    body[data-accents="off"] .eyebrow { display: none; }
+    body[data-home="photos"] .home-grid { grid-template-columns: minmax(0, 1.5fr) minmax(280px, .7fr); }
+    body[data-home="checklist"] .home-grid { grid-template-columns: minmax(280px, .7fr) minmax(0, 1.3fr); }
+    body[data-chart="bars"] .pie { display: none; }
+    body[data-chart="bars"] .nutrition-layout { grid-template-columns: 1fr; }
+    body[data-chart="pie"] #foodGroupList { display: none; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .wrap { max-width: var(--page-width, 1280px); margin: 0 auto; padding: 18px; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .eyebrow {
+      margin: 0;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1; }
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1rem; }
+    .weather, .card, dialog {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .weather {
+      min-width: min(360px, 48vw);
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .weather-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: var(--soft);
+      color: var(--accent);
+      font-weight: 800;
+    }
+    .weather small { display: block; color: var(--muted); margin-top: 2px; }
+    nav {
+      display: flex;
+      gap: calc(var(--gap) * .6);
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    nav button, .btn, .icon {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: var(--control);
+      padding: 8px 12px;
+      background: var(--card);
+      color: var(--text);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    nav button.active, .primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+    .ghost { background: var(--soft); }
+    .danger { color: var(--danger); }
+    .view { display: none; }
+    .view.active { display: block; }
+    .grid {
+      display: grid;
+      gap: var(--gap);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .home-grid {
+      display: grid;
+      gap: var(--gap);
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+      align-items: start;
+    }
+    .card { padding: var(--pad); }
+    .card-head, .section-head, .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(var(--gap) * .72);
+    }
+    .section-head { margin: 4px 0 14px; }
+    .stack { display: grid; gap: calc(var(--gap) * .72); margin-top: 12px; }
+    .item, .idea, .macro-card {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: calc(var(--pad) * .75);
+    }
+    .item { display: grid; gap: 8px; }
+    .muted { color: var(--muted); }
+    .pill {
+      border-radius: 999px;
+      background: rgba(47, 143, 131, .13);
+      color: var(--brand);
+      padding: 5px 9px;
+      font-size: .82rem;
+      font-weight: 800;
+    }
+    label.field { display: grid; gap: 6px; }
+    label.field span, .setting-label {
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+    input, textarea, select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      padding: 9px 10px;
+    }
+    textarea { min-height: 82px; resize: vertical; }
+    .fields { display: grid; gap: calc(var(--gap) * .72); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero {
+      min-height: var(--hero-height);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(242,139,109,.45), transparent 28%),
+        radial-gradient(circle at 80% 18%, rgba(59,118,175,.28), transparent 30%),
+        linear-gradient(135deg, #fff8ef, #eaf7f2 58%, #f7e8e3);
+      display: flex;
+      align-items: flex-end;
+      padding: 18px;
+    }
+    .hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .hero-caption {
+      position: relative;
+      max-width: 420px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .photo-actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+    .photo-actions input { display: none; }
+    .calendar-tools {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .calendar {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      margin-bottom: 14px;
+    }
+    .day {
+      min-height: 104px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .event-dot {
+      margin-top: 5px;
+      padding: 5px 6px;
+      border-radius: calc(var(--radius) * .75);
+      background: var(--brand-2);
+      color: white;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    .nutrition-layout { display: grid; gap: var(--gap); grid-template-columns: 220px minmax(0, 1fr); align-items: center; }
+    .pie { width: 190px; height: 190px; border-radius: 50%; border: 1px solid var(--line); background: conic-gradient(var(--brand) 0 1deg, var(--soft) 1deg 360deg); box-shadow: inset 0 0 0 32px var(--card); margin: auto; }
+    .progress { height: 10px; background: rgba(34,48,45,.1); border-radius: 999px; overflow: hidden; }
+    .progress span { display:block; height:100%; background: var(--brand); border-radius: 999px; }
+    .milestone-status { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .milestone-status button { min-height: 34px; padding: 6px 8px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--card); }
+    .milestone-status button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .swatches { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .swatch {
+      display: grid;
+      gap: 5px;
+      border: 2px solid transparent;
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 8px;
+    }
+    .swatch.active { border-color: var(--text); }
+    .swatch span { display: block; height: 18px; width: 72px; border-radius: 999px; }
+    .setting-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .segmented { display: flex; flex-wrap: wrap; gap: 8px; }
+    .segmented button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .setting-note { color: var(--muted); font-size: .86rem; }
+    dialog { width: min(560px, calc(100vw - 26px)); padding: 0; }
+    dialog::backdrop { background: rgba(34,48,45,.45); }
+    form.dialog { padding: 16px; display: grid; gap: 12px; }
+    .hidden { display: none !important; }
+    .dragging .move-card { outline: 2px dashed var(--brand); }
+    @media (max-width: 850px) {
+      header, .section-head, .calendar-tools { align-items: stretch; flex-direction: column; }
+      .weather { min-width: 0; width: 100%; }
+      .grid, .home-grid, .fields, .calendar, .nutrition-layout { grid-template-columns: 1fr; }
+      .hero { min-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <p class="eyebrow">Winnipeg family planner</p>
+        <h1>Little Days</h1>
+      </div>
+      <div class="weather">
+        <div class="weather-badge" id="weatherBadge">...</div>
+        <div>
+          <strong id="weatherTemp">Loading weather</strong>
+          <small id="weatherText">Winnipeg, Manitoba</small>
+        </div>
+      </div>
+    </header>
+
+    <nav id="tabs"></nav>
+
+    <main>
+      <section class="view active" id="home">
+        <div class="home-grid" id="homeGrid">
+          <article class="card move-card" draggable="false" data-panel="photos">
+            <div class="card-head">
+              <div><p class="eyebrow">Home</p><h2>Family slideshow</h2></div>
+              <button class="btn ghost" id="moveMode" type="button">Move</button>
+            </div>
+            <div class="hero" id="hero">
+              <div class="photo-actions">
+                <label class="btn ghost">Add photos<input id="photoInput" type="file" accept="image/*" multiple></label>
+                <button class="btn ghost" id="prevPhoto" type="button">Prev</button>
+                <button class="btn ghost" id="nextPhoto" type="button">Next</button>
+              </div>
+              <div class="hero-caption">
+                <h2>Today at a glance</h2>
+                <p class="muted">Care, meals, learning, activities, and appointments in one place.</p>
+              </div>
+            </div>
+          </article>
+          <article class="card move-card" draggable="false" data-panel="needs">
+            <div class="card-head"><div><p class="eyebrow">Today</p><h2>Needs and care</h2></div></div>
+            <div class="stack" id="homeNeeds"></div>
+          </article>
+          <article class="card move-card" draggable="false" data-panel="ideas">
+            <div class="card-head"><div><p class="eyebrow">Weather aware</p><h2>Daily ideas</h2></div><button class="btn ghost" id="refreshWeather" type="button">Refresh</button></div>
+            <div class="stack" id="homeIdeas"></div>
+          </article>
+          <article class="card move-card" draggable="false" data-panel="reminders">
+            <div class="card-head"><div><p class="eyebrow">Reminders</p><h2>Notes</h2></div><button class="btn primary" data-open="note" type="button">Add</button></div>
+            <div class="stack" id="homeNotes"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="kids">
+        <div class="section-head"><div><p class="eyebrow">Daily care</p><h2>Kids, needs, care, activities, learning</h2></div><button class="btn primary" data-open="kid" type="button">Add child</button></div>
+        <div class="grid" id="kidList"></div>
+        <article class="card" style="margin-top:14px"><div class="card-head"><div><p class="eyebrow">Suggestions</p><h2>Schedule ideas for today</h2></div></div><div class="stack" id="kidIdeas"></div></article>
+      </section>
+
+      <section class="view" id="milestones">
+        <div class="section-head"><div><p class="eyebrow">Development</p><h2>Age-based milestones</h2></div></div>
+        <div class="grid" id="milestoneList"></div>
+      </section>
+
+      <section class="view" id="notes">
+        <div class="section-head"><div><p class="eyebrow">Daily reminders</p><h2>Notes</h2></div><button class="btn primary" data-open="note" type="button">Add note</button></div>
+        <div class="stack" id="noteList"></div>
+      </section>
+
+      <section class="view" id="health">
+        <div class="section-head"><div><p class="eyebrow">Overall health</p><h2>Age, health, weight, size</h2></div></div>
+        <div class="grid" id="healthList"></div>
+        <div class="grid" style="margin-top:14px">
+          <article class="card"><div class="card-head"><h2>Growth history</h2><button class="btn primary" data-open="growth" type="button">Add growth</button></div><div class="stack" id="growthList"></div></article>
+          <article class="card"><div class="card-head"><h2>Appointments</h2><button class="btn primary" data-open="appointment" type="button">Add appointment</button></div><div class="stack" id="appointmentList"></div></article>
+        </div>
+      </section>
+
+      <section class="view" id="food">
+        <div class="section-head"><div><p class="eyebrow">Food tracker</p><h2>Food, breast milk, macros</h2></div><button class="btn primary" data-open="food" type="button">Add intake</button></div>
+        <article class="card" style="margin-bottom:14px">
+          <div class="card-head"><div><p class="eyebrow">Food groups</p><h2>Today's nutrition balance</h2></div><span class="pill" id="foodGroupSummary"></span></div>
+          <div class="nutrition-layout">
+            <div class="pie" id="foodPie"></div>
+            <div class="stack" id="foodGroupList"></div>
+          </div>
+        </article>
+        <div class="grid">
+          <article class="card"><div class="card-head"><h2>Today</h2><span class="pill" id="macroTotal"></span></div><div class="stack" id="foodList"></div></article>
+          <article class="card"><div class="card-head"><h2>Recommended macro guide</h2><span class="pill">By age</span></div><div class="stack" id="macroGuide"></div></article>
+        </div>
+        <article class="card" style="margin-top:14px"><div class="card-head"><div><p class="eyebrow">Daily recipes</p><h2>Meal and snack ideas</h2></div></div><div class="stack" id="recipeIdeas"></div></article>
+      </section>
+
+      <section class="view" id="calendar">
+        <div class="section-head"><div><p class="eyebrow">Calendar</p><h2>Daily, weekly, monthly activities</h2></div><button class="btn primary" data-open="event" type="button">Add event</button></div>
+        <div class="calendar-tools card">
+          <button class="btn ghost" id="prevMonth" type="button">Prev</button>
+          <strong id="monthTitle"></strong>
+          <button class="btn ghost" id="nextMonth" type="button">Next</button>
+          <select id="calendarMode"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select>
+        </div>
+        <div class="calendar" id="calendarGrid"></div>
+        <article class="card"><div class="card-head"><h2>Monthly appointments and events</h2><span class="pill" id="eventCount"></span></div><div class="stack" id="eventList"></div></article>
+      </section>
+
+      <section class="view" id="settings">
+        <div class="section-head"><div><p class="eyebrow">Settings</p><h2>Appearance and tabs</h2></div></div>
+        <div class="grid">
+          <article class="card">
+            <h2>Theme color</h2>
+            <div class="swatches" id="themes"></div>
+            <div class="stack">
+              <label class="field"><span>Font size</span><input id="fontSize" type="range" min="14" max="20" step="1"></label>
+            </div>
+          </article>
+          <article class="card">
+            <h2>Presentation</h2>
+            <p class="setting-note">Change how the app feels without changing your saved family data.</p>
+            <div class="stack setting-grid" id="presentationSettings"></div>
+          </article>
+          <article class="card">
+            <h2>Data display</h2>
+            <p class="setting-note">Choose what details show first on busy days.</p>
+            <div class="stack setting-grid" id="displaySettings"></div>
+          </article>
+          <article class="card"><h2>Tabs</h2><div class="stack" id="tabSettings"></div></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="dialog">
+    <form class="dialog" method="dialog">
+      <div class="card-head"><h2 id="dialogTitle">Add</h2><button class="btn ghost" value="cancel" type="submit">Close</button></div>
+      <div class="stack" id="dialogFields"></div>
+      <div class="row"><span></span><button class="btn primary" id="dialogSave" value="save" type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <script>
+    const KEY = "littleDays.v2";
+    const WEATHER = "https://api.open-meteo.com/v1/forecast?latitude=49.8951&longitude=-97.1384&current=temperature_2m,precipitation,weather_code,wind_speed_10m&timezone=America%2FWinnipeg";
+    const tabs = [["home","Home"],["kids","Kids"],["milestones","Milestones"],["notes","Notes"],["health","Health"],["food","Food"],["calendar","Calendar"],["settings","Settings"]];
+    const themes = {
+      meadow: ["Meadow","#f6f3ee","#ffffff","#edf7f4","#22302d","#2f8f83","#f28b6d","#3b76af"],
+      sky: ["Sky","#f2f7fb","#ffffff","#e7f0f8","#1f3140","#3178b9","#71a86d","#d56f5d"],
+      berry: ["Berry","#fbf4f6","#ffffff","#f6e7ec","#352831","#a33e67","#4b927f","#d28a3f"],
+      graphite: ["Graphite","#f4f5f3","#ffffff","#e8ebe6","#252923","#5c735c","#bd7258","#4c7394"]
+    };
+    const macroGuide = [
+      ["0-6 months","Breast milk/formula on demand","Milk is primary source","High fat needs for growth","Ask a pediatric provider before changing feeding plans."],
+      ["7-12 months","11 g/day","95 g/day","30 g/day","Use iron-rich foods with breast milk/formula."],
+      ["1-3 years","13 g/day","130 g/day","30-40% of calories","Offer frequent small meals and snacks."],
+      ["4-8 years","19 g/day","130 g/day","25-35% of calories","Balance protein, grains, fruit, vegetables, dairy or alternatives."]
+    ];
+    const foodGroups = [
+      ["fruit","Fruits","#f28b6d"],["vegetables","Vegetables","#4b927f"],["grains","Grains","#d2a34a"],["proteinFood","Protein","#a33e67"],["dairy","Dairy / milk / formula","#3b76af"],["fats","Fats","#8a6fbe"],["water","Water","#53a7c8"]
+    ];
+    const foodTargets = {
+      baby:{label:"Baby", fruit:1, vegetables:1, grains:1, proteinFood:1, dairy:4, fats:1, water:0},
+      toddler:{label:"Toddler", fruit:2, vegetables:2, grains:3, proteinFood:2, dairy:2, fats:1, water:3},
+      child:{label:"Child", fruit:2, vegetables:2, grains:4, proteinFood:2, dairy:2, fats:1, water:4}
+    };
+    const milestoneBank = [
+      {min:0,max:5,cat:"Physical",text:"Lifts head, brings hands to mouth, begins rolling"},
+      {min:0,max:5,cat:"Speech/language",text:"Coos, turns toward familiar voices, cries differently for needs"},
+      {min:0,max:5,cat:"Cognitive",text:"Watches faces, follows objects, shows interest in people"},
+      {min:0,max:5,cat:"Social",text:"Smiles responsively and calms with caregiver support"},
+      {min:0,max:5,cat:"Emotional",text:"Shows comfort, distress, and early self-soothing"},
+      {min:0,max:5,cat:"Self-care",text:"Begins feeding rhythm with caregiver support"},
+      {min:6,max:11,cat:"Physical",text:"Sits with support, rolls, reaches, may crawl or pull up"},
+      {min:6,max:11,cat:"Speech/language",text:"Babbles, responds to name, uses gestures"},
+      {min:6,max:11,cat:"Cognitive",text:"Explores objects, looks for hidden items, copies simple actions"},
+      {min:6,max:11,cat:"Social",text:"Shows preference for familiar people and plays simple games"},
+      {min:6,max:11,cat:"Emotional",text:"Shows stranger awareness and seeks comfort"},
+      {min:6,max:11,cat:"Self-care",text:"Tries finger foods and drinks with help"},
+      {min:12,max:23,cat:"Physical",text:"Walks, climbs, stacks blocks, begins running"},
+      {min:12,max:23,cat:"Speech/language",text:"Uses first words, points, follows simple directions"},
+      {min:12,max:23,cat:"Cognitive",text:"Pretend play begins, sorts shapes, solves simple problems"},
+      {min:12,max:23,cat:"Social",text:"Imitates adults and plays near other children"},
+      {min:12,max:23,cat:"Emotional",text:"Shows independence, preferences, and separation feelings"},
+      {min:12,max:23,cat:"Self-care",text:"Helps with dressing, uses spoon with spills"},
+      {min:24,max:35,cat:"Physical",text:"Runs, jumps, kicks ball, turns pages"},
+      {min:24,max:35,cat:"Speech/language",text:"Uses 2-4 word phrases and names familiar things"},
+      {min:24,max:35,cat:"Cognitive",text:"Matches shapes/colors and follows two-step directions"},
+      {min:24,max:35,cat:"Social",text:"Parallel play, early sharing, copies routines"},
+      {min:24,max:35,cat:"Emotional",text:"Names feelings with help and recovers from frustration"},
+      {min:24,max:35,cat:"Self-care",text:"Toilet learning signs, washes hands with help"},
+      {min:36,max:59,cat:"Physical",text:"Pedals, hops, draws simple shapes, uses child scissors"},
+      {min:36,max:59,cat:"Speech/language",text:"Tells stories, asks questions, speaks clearly enough for familiar adults"},
+      {min:36,max:59,cat:"Cognitive",text:"Counts, understands routines, sorts and compares"},
+      {min:36,max:59,cat:"Social",text:"Cooperative play, turn-taking, pretend roles"},
+      {min:36,max:59,cat:"Emotional",text:"Uses words for feelings and manages transitions with support"},
+      {min:36,max:59,cat:"Self-care",text:"Dresses with help, brushes teeth with help, toileting progress"},
+      {min:60,max:120,cat:"Physical",text:"Improves balance, coordination, handwriting, and sport/play skills"},
+      {min:60,max:120,cat:"Speech/language",text:"Explains ideas, follows multi-step directions, grows vocabulary"},
+      {min:60,max:120,cat:"Cognitive",text:"Reads/counts at level, plans tasks, solves multi-step problems"},
+      {min:60,max:120,cat:"Social",text:"Friendships, teamwork, empathy, conflict repair"},
+      {min:60,max:120,cat:"Emotional",text:"Identifies feelings, uses coping strategies, builds confidence"},
+      {min:60,max:120,cat:"Self-care",text:"More independent hygiene, dressing, chores, and routines"}
+    ];
+    const defaultState = {
+      active:"home",
+      month:new Date().toISOString().slice(0,7),
+      mode:"month",
+      weather:null,
+      photoIndex:0,
+      photos:[],
+      settings:{
+        theme:"meadow", fontSize:16, density:"comfortable", cardShape:"soft", shadow:"soft", fontStyle:"friendly", tabStyle:"pills", contrast:"normal", accents:"on",
+        homeLayout:"balanced", detailLevel:"full", chartStyle:"both", showCompleted:true, homeNoteLimit:4, foodLogLimit:10, recipeCount:3, photoHeight:320, pageWidth:"wide",
+        tabs:{home:true,kids:true,milestones:true,notes:true,health:true,food:true,calendar:true,settings:true},
+        tabOrder:["home","kids","milestones","notes","health","food","calendar","settings"],
+        order:["photos","needs","ideas","reminders"]
+      },
+      kids:[{id:id(),name:"Child 1",birthday:"2023-07-07",weight:"",height:"",health:"No notes yet",care:"Nap, sunscreen, water bottle",activities:"Outdoor walk or indoor play",learning:"Read together and practice colors",needs:[{id:id(),text:"Morning care",done:false},{id:id(),text:"Quiet rest",done:false}]}],
+      notes:[{id:id(),title:"Daily reminder",date:today(),text:"Pack snacks, diapers, wipes, and water.",done:false}],
+      food:[],
+      events:[],
+      milestones:{},
+      growth:[],
+      appointments:[]
+    };
+    let state = load();
+    let dragCard = null;
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    function id(){ return Math.random().toString(36).slice(2,10); }
+    function today(){ return new Date().toISOString().slice(0,10); }
+    function esc(v=""){ return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function load(){
+      try {
+        const saved = JSON.parse(localStorage.getItem(KEY));
+        if (!saved) return structuredClone(defaultState);
+        return {...structuredClone(defaultState), ...saved, settings:{...defaultState.settings,...saved.settings,tabs:{...defaultState.settings.tabs,...(saved.settings?.tabs||{})}}};
+      } catch { return structuredClone(defaultState); }
+    }
+    function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+    function applyTheme(){
+      const t = themes[state.settings.theme] || themes.meadow;
+      const names = ["--bg","--card","--soft","--text","--brand","--brand-2","--accent"];
+      [t[1],t[2],t[3],t[4],t[5],t[6],t[7]].forEach((v,i)=>document.documentElement.style.setProperty(names[i],v));
+      document.documentElement.style.setProperty("--font-size", state.settings.fontSize + "px");
+      const density = {
+        compact:{pad:12,gap:10,control:36},
+        comfortable:{pad:16,gap:14,control:40},
+        roomy:{pad:20,gap:18,control:46}
+      }[state.settings.density] || {pad:16,gap:14,control:40};
+      const radius = {square:6, soft:12, round:20}[state.settings.cardShape] || 12;
+      const shadows = {none:"none", soft:"0 12px 30px rgba(34, 48, 45, .12)", lift:"0 18px 44px rgba(34, 48, 45, .18)"}; 
+      const widths = {focused:"980px", wide:"1280px", full:"1600px"};
+      document.documentElement.style.setProperty("--pad", density.pad + "px");
+      document.documentElement.style.setProperty("--gap", density.gap + "px");
+      document.documentElement.style.setProperty("--control", density.control + "px");
+      document.documentElement.style.setProperty("--radius", radius + "px");
+      document.documentElement.style.setProperty("--shadow", shadows[state.settings.shadow] || shadows.soft);
+      document.documentElement.style.setProperty("--hero-height", (state.settings.photoHeight || 320) + "px");
+      document.documentElement.style.setProperty("--page-width", widths[state.settings.pageWidth] || widths.wide);
+      document.documentElement.style.setProperty("--texture", state.settings.theme === "meadow" ? "linear-gradient(135deg, rgba(255,255,255,.35), transparent 42%)" : "transparent");
+      document.body.dataset.font = state.settings.fontStyle || "friendly";
+      document.body.dataset.tabs = state.settings.tabStyle || "pills";
+      document.body.dataset.contrast = state.settings.contrast || "normal";
+      document.body.dataset.home = state.settings.homeLayout || "balanced";
+      document.body.dataset.detail = state.settings.detailLevel || "full";
+      document.body.dataset.chart = state.settings.chartStyle || "both";
+      document.body.dataset.accents = state.settings.accents || "on";
+    }
+    function render(){
+      applyTheme();
+      renderTabs();
+      renderHome();
+      renderKids();
+      renderMilestones();
+      renderNotes();
+      renderHealth();
+      renderFood();
+      renderCalendar();
+      renderSettings();
+    }
+    function orderedTabs(){
+      const map = Object.fromEntries(tabs);
+      const order = state.settings.tabOrder || tabs.map(([k])=>k);
+      return order.filter(k => map[k]).map(k => [k, map[k]]).concat(tabs.filter(([k]) => !order.includes(k)));
+    }
+    function renderTabs(){
+      $("#tabs").innerHTML = orderedTabs().filter(([k]) => state.settings.tabs[k] || k === "settings").map(([k,l]) => `<button type="button" class="${state.active===k?'active':''}" data-tab="${k}">${l}</button>`).join("");
+      $$(".view").forEach(v => v.classList.toggle("active", v.id === state.active));
+    }
+    function renderHome(){
+      state.settings.order.forEach(p => { const el = $(`[data-panel="${p}"]`); if (el) $("#homeGrid").append(el); });
+      const hero = $("#hero");
+      hero.querySelectorAll("img").forEach(i => i.remove());
+      if (state.photos.length) {
+        const img = new Image();
+        img.src = state.photos[state.photoIndex % state.photos.length];
+        hero.prepend(img);
+      }
+      const needs = state.kids.flatMap(k => k.needs.map(n => ({kid:k.name, ...n, kidId:k.id}))).filter(n => state.settings.showCompleted || !n.done);
+      $("#homeNeeds").innerHTML = needs.map(n => `<label class="item row"><span><strong>${esc(n.kid)}</strong>: ${esc(n.text)}</span><input type="checkbox" data-need="${n.kidId}:${n.id}" ${n.done?'checked':''}></label>`).join("") || `<p class="muted">No needs yet.</p>`;
+      const notes = state.notes.filter(n => state.settings.showCompleted || !n.done).slice(0, +(state.settings.homeNoteLimit || 4));
+      $("#homeNotes").innerHTML = notes.map(n => `<label class="item row"><span><strong>${esc(n.title)}</strong><br><span class="muted optional-detail">${esc(n.text)}</span></span><input type="checkbox" data-note-done="${n.id}" ${n.done?'checked':''}></label>`).join("") || `<p class="muted">No notes yet.</p>`;
+      renderIdeas("#homeIdeas");
+    }
+    function renderKids(){
+      $("#kidList").innerHTML = state.kids.map(k => `<article class="card">
+        <div class="card-head"><div><p class="eyebrow">${age(k.birthday)}</p><h2>${esc(k.name)}</h2></div><button class="btn ghost danger" data-del-kid="${k.id}" type="button">Remove</button></div>
+        <div class="fields">
+          <label class="field"><span>Name</span><input data-kid="${k.id}:name" value="${esc(k.name)}"></label>
+          <label class="field"><span>Birthday</span><input type="date" data-kid="${k.id}:birthday" value="${esc(k.birthday)}"></label>
+        </div>
+        <div class="stack">
+          <label class="field"><span>Care</span><textarea data-kid="${k.id}:care">${esc(k.care)}</textarea></label>
+          <label class="field"><span>Activities</span><textarea data-kid="${k.id}:activities">${esc(k.activities)}</textarea></label>
+          <label class="field"><span>Learning</span><textarea data-kid="${k.id}:learning">${esc(k.learning)}</textarea></label>
+          <div class="card-head"><h3>Daily needs</h3><button class="btn ghost" data-add-need="${k.id}" type="button">Add need</button></div>
+          ${k.needs.filter(n => state.settings.showCompleted || !n.done).map(n => `<label class="item row"><span>${esc(n.text)}</span><span><input type="checkbox" data-need="${k.id}:${n.id}" ${n.done?'checked':''}> <button class="btn ghost danger" data-del-need="${k.id}:${n.id}" type="button">Remove</button></span></label>`).join("")}
+        </div>
+      </article>`).join("");
+      renderIdeas("#kidIdeas");
+    }
+    function renderIdeas(target){
+      const w = state.weather || {};
+      const temp = w.temperature;
+      const rainy = Number(w.precipitation || 0) > 0 || [51,53,55,61,63,65,71,73,75].includes(w.code);
+      const toddler = averageMonths() < 48;
+      const weatherIdea = rainy ? "Indoor obstacle path, library visit, baking prep, or music movement." :
+        temp < -5 ? "Short bundled outdoor walk, then warm indoor blocks, books, or art." :
+        temp > 28 ? "Morning shade play, water table, sunscreen check, and indoor afternoon rest." :
+        "Park time, scavenger walk, bubbles, sidewalk chalk, or backyard play.";
+      const learning = toddler ? "Sort colors, count snack pieces, name body parts, and read a picture book." : "Practice letters, nature journaling, measuring in the kitchen, or simple counting games.";
+      $(target).innerHTML = [
+        ["Morning rhythm", toddler ? "Breakfast, care checks, reading, then sensory play." : "Breakfast, care checks, reading, then a small project."],
+        ["Weather pick", weatherIdea],
+        ["Learning activity", learning],
+        ["Quiet close", "Snack, hygiene check, calm music or books, then note anything important for tomorrow."]
+      ].map(([h,t]) => `<div class="idea"><strong>${h}</strong><p class="muted">${t}</p></div>`).join("");
+    }
+    function renderMilestones(){
+      $("#milestoneList").innerHTML = state.kids.map(k => {
+        const months = ageMonths(k.birthday);
+        const items = milestoneBank.filter(m => months >= m.min && months <= m.max);
+        return `<article class="card"><div class="card-head"><div><p class="eyebrow">${age(k.birthday)}</p><h2>${esc(k.name)}</h2></div><span class="pill">${items.length} expected</span></div><div class="stack">${items.map(m => {
+          const key = `${k.id}|${m.cat}|${m.text}`;
+          const value = state.milestones[key] || "not started";
+          return `<div class="item"><div><strong>${m.cat}</strong><p>${esc(m.text)}</p></div><div class="milestone-status">${["not started","emerging","achieved","concern"].map(s => `<button type="button" class="${value===s?"active":""}" data-milestone="${esc(key)}" data-status="${s}">${s}</button>`).join("")}</div></div>`;
+        }).join("")}</div></article>`;
+      }).join("") || `<p class="muted">Add a child to see milestones.</p>`;
+    }
+    function renderNotes(){
+      $("#noteList").innerHTML = state.notes.map(n => `<article class="item">
+        <div class="row"><strong>${esc(n.title)}</strong><button class="btn ghost danger" data-del-note="${n.id}" type="button">Remove</button></div>
+        <label class="field"><span>Date</span><input type="date" data-note="${n.id}:date" value="${esc(n.date)}"></label>
+        <label class="field optional-detail"><span>Note</span><textarea data-note="${n.id}:text">${esc(n.text)}</textarea></label>
+        <label class="row"><span class="setting-label">Done</span><input type="checkbox" data-note-done="${n.id}" ${n.done?'checked':''}></label>
+      </article>`).join("") || `<p class="muted">No notes yet.</p>`;
+    }
+    function renderHealth(){
+      $("#healthList").innerHTML = state.kids.map(k => `<article class="card">
+        <p class="eyebrow">${age(k.birthday)}</p><h2>${esc(k.name)}</h2>
+        <div class="stack">
+          <div class="fields">
+            <label class="field"><span>Weight</span><input data-kid="${k.id}:weight" value="${esc(k.weight)}" placeholder="Example: 30 lb"></label>
+            <label class="field"><span>Size / height</span><input data-kid="${k.id}:height" value="${esc(k.height)}" placeholder="Example: 36 in"></label>
+          </div>
+          <label class="field"><span>Health notes</span><textarea data-kid="${k.id}:health">${esc(k.health)}</textarea></label>
+        </div>
+      </article>`).join("") || `<p class="muted">Add children in Kids.</p>`;
+      $("#growthList").innerHTML = state.growth.map(g => `<article class="item"><div class="row"><strong>${esc(g.child || "Child")}</strong><button class="btn ghost danger" data-del-growth="${g.id}" type="button">Remove</button></div><p class="muted">${esc(g.date)} | ${esc(g.weight)} | ${esc(g.height)}</p><p>${esc(g.notes || "")}</p></article>`).join("") || `<p class="muted">No growth entries yet.</p>`;
+      $("#appointmentList").innerHTML = state.appointments.map(a => `<article class="item"><div class="row"><strong>${esc(a.title || "Appointment")}</strong><button class="btn ghost danger" data-del-appointment="${a.id}" type="button">Remove</button></div><p class="muted">${esc(a.date)} ${esc(a.time || "")} | ${esc(a.child || "All kids")}</p><p>${esc(a.notes || "")}</p></article>`).join("") || `<p class="muted">No appointments yet.</p>`;
+    }
+    function renderFood(){
+      const todaysFood = state.food.filter(f => f.date === today());
+      const totals = todaysFood.reduce((a,f) => {
+        a.p += +f.protein || 0; a.c += +f.carbs || 0; a.f += +f.fat || 0; a.cal += +f.calories || 0; return a;
+      }, {p:0,c:0,f:0,cal:0});
+      $("#macroTotal").textContent = `${totals.cal} cal | P ${totals.p}g C ${totals.c}g F ${totals.f}g`;
+      const target = groupTargetForSelectedKid();
+      const actual = foodGroups.reduce((acc,[key]) => (acc[key] = todaysFood.reduce((n,f)=>n+(+f[key]||0),0), acc), {});
+      const segments = [];
+      let start = 0;
+      const totalServings = foodGroups.reduce((n,[key])=>n+actual[key],0) || 1;
+      foodGroups.forEach(([key,label,color]) => { const size = actual[key] / totalServings * 360; segments.push(`${color} ${start}deg ${start+size}deg`); start += size; });
+      $("#foodPie").style.background = `conic-gradient(${segments.join(",")})`;
+      const complete = foodGroups.filter(([key]) => actual[key] >= (target[key] || 0)).length;
+      $("#foodGroupSummary").textContent = `${complete}/${foodGroups.length} groups on track`;
+      $("#foodGroupList").innerHTML = foodGroups.map(([key,label]) => {
+        const goal = target[key] || 0;
+        const amount = actual[key] || 0;
+        const pct = goal ? Math.min(100, Math.round(amount / goal * 100)) : 100;
+        return `<div class="item"><div class="row"><strong>${label}</strong><span class="pill">${amount}/${goal || "as needed"}</span></div><div class="progress"><span style="width:${pct}%"></span></div></div>`;
+      }).join("");
+      const foodLimit = +(state.settings.foodLogLimit || 10);
+      $("#foodList").innerHTML = state.food.slice(0, foodLimit).map(f => `<article class="item"><div class="row"><strong>${esc(f.child || "All kids")} - ${esc(f.food)}</strong><button class="btn ghost danger" data-del-food="${f.id}" type="button">Remove</button></div><p class="muted">${esc(f.date)} | ${esc(f.amount)} | ${esc(f.type)}</p><p class="optional-detail">Protein ${f.protein||0}g, Carbs ${f.carbs||0}g, Fat ${f.fat||0}g, Calories ${f.calories||0}</p><p class="muted optional-detail">Groups: fruit ${f.fruit||0}, veg ${f.vegetables||0}, grains ${f.grains||0}, protein ${f.proteinFood||0}, dairy ${f.dairy||0}, water ${f.water||0}</p></article>`).join("") || `<p class="muted">No intake logged yet.</p>`;
+      $("#macroGuide").innerHTML = macroGuide.map(g => `<div class="macro-card"><strong>${g[0]}</strong><p class="muted">Protein: ${g[1]}</p><p class="muted">Carbs: ${g[2]}</p><p class="muted">Fat: ${g[3]}</p><p>${g[4]}</p></div>`).join("");
+      $("#recipeIdeas").innerHTML = recipeIdeas(todaysFood, target, actual).slice(0, +(state.settings.recipeCount || 3)).map(r => `<div class="idea"><strong>${r[0]}</strong><p class="muted">${r[1]}</p></div>`).join("");
+    }
+    function renderCalendar(){
+      const [y,m] = state.month.split("-").map(Number);
+      const date = new Date(y, m-1, 1);
+      $("#monthTitle").textContent = date.toLocaleDateString("en-CA", {month:"long", year:"numeric"});
+      $("#calendarMode").value = state.mode;
+      const days = daysFor(date, state.mode);
+      $("#calendarGrid").innerHTML = days.map(d => {
+        const iso = d.toISOString().slice(0,10);
+        const events = eventsForDate(iso);
+        return `<div class="day"><strong>${d.toLocaleDateString("en-CA",{weekday:"short",month:"short",day:"numeric"})}</strong>${events.map(e => `<div class="event-dot">${esc(e.time||"")} ${esc(e.title)}</div>`).join("")}</div>`;
+      }).join("");
+      const monthEvents = state.events.filter(e => e.date.startsWith(state.month) || recurringInMonth(e, state.month)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+      $("#eventCount").textContent = `${monthEvents.length} scheduled`;
+      $("#eventList").innerHTML = monthEvents.map(e => `<article class="item"><div class="row"><strong>${esc(e.title)}</strong><button class="btn ghost danger" data-del-event="${e.id}" type="button">Remove</button></div><p class="muted">${esc(e.date)} ${esc(e.time||"")} | ${esc(e.type||"Activity")}</p><p>${esc(e.notes||"")}</p></article>`).join("") || `<p class="muted">No events this month.</p>`;
+    }
+    function renderSettings(){
+      $("#fontSize").value = state.settings.fontSize;
+      $("#themes").innerHTML = Object.entries(themes).map(([k,t]) => `<button class="swatch ${state.settings.theme===k?'active':''}" data-theme="${k}" type="button"><span style="background:linear-gradient(90deg,${t[5]},${t[6]},${t[7]})"></span><strong>${t[0]}</strong></button>`).join("");
+      $("#presentationSettings").innerHTML = [
+        selectSetting("density","Spacing",[["compact","Compact"],["comfortable","Comfortable"],["roomy","Roomy"]]),
+        selectSetting("cardShape","Card shape",[["square","Square"],["soft","Soft"],["round","Round"]]),
+        selectSetting("shadow","Depth",[["none","Flat"],["soft","Soft shadow"],["lift","Raised"]]),
+        selectSetting("fontStyle","Font style",[["friendly","Friendly"],["round","Round"],["calm","Calm serif"]]),
+        selectSetting("tabStyle","Tab style",[["pills","Pills"],["underline","Underline"]]),
+        selectSetting("contrast","Contrast",[["normal","Normal"],["high","High"]]),
+        selectSetting("pageWidth","Page width",[["focused","Focused"],["wide","Wide"],["full","Full"]]),
+        rangeSetting("photoHeight","Photo height",220,460,20,"px")
+      ].join("");
+      $("#displaySettings").innerHTML = [
+        selectSetting("homeLayout","Home layout",[["balanced","Balanced"],["photos","Photo focus"],["checklist","Checklist focus"]]),
+        selectSetting("detailLevel","Detail level",[["full","Full detail"],["simple","Simple"]]),
+        selectSetting("chartStyle","Nutrition chart",[["both","Pie and bars"],["bars","Bars only"],["pie","Pie only"]]),
+        selectSetting("accents","Section labels",[["on","Show"],["off","Hide"]]),
+        rangeSetting("homeNoteLimit","Home notes",1,10,1,""),
+        rangeSetting("foodLogLimit","Food log items",3,25,1,""),
+        rangeSetting("recipeCount","Recipe ideas",1,6,1,""),
+        checkSetting("showCompleted","Show completed tasks")
+      ].join("");
+      $("#tabSettings").innerHTML = orderedTabs().filter(([k]) => k !== "settings").map(([k,l]) => `<div class="item row"><label><span>${l}</span> <input type="checkbox" data-tab-toggle="${k}" ${state.settings.tabs[k]?'checked':''}></label><span><button class="btn ghost" data-tab-move="${k}:up" type="button">Up</button> <button class="btn ghost" data-tab-move="${k}:down" type="button">Down</button></span></div>`).join("");
+    }
+    function selectSetting(key,label,options){
+      return `<label class="field"><span>${label}</span><select data-setting="${key}">${options.map(([v,t]) => `<option value="${v}" ${state.settings[key]===v?"selected":""}>${t}</option>`).join("")}</select></label>`;
+    }
+    function rangeSetting(key,label,min,max,step,suffix){
+      return `<label class="field"><span>${label}: ${state.settings[key]}${suffix}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${state.settings[key]}" data-setting="${key}"></label>`;
+    }
+    function checkSetting(key,label){
+      return `<label class="item row"><span>${label}</span><input type="checkbox" data-setting-check="${key}" ${state.settings[key]?"checked":""}></label>`;
+    }
+    function daysFor(date, mode){
+      if (mode === "day") return [new Date()];
+      if (mode === "week") { const s = new Date(); s.setDate(s.getDate() - s.getDay()); return Array.from({length:7},(_,i)=>new Date(s.getFullYear(),s.getMonth(),s.getDate()+i)); }
+      return Array.from({length:new Date(date.getFullYear(), date.getMonth()+1, 0).getDate()},(_,i)=>new Date(date.getFullYear(),date.getMonth(),i+1));
+    }
+    function eventsForDate(iso){
+      return state.events.filter(e => eventOccursOn(e, iso)).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+    }
+    function eventOccursOn(event, iso){
+      if (!event.date || event.date > iso) return false;
+      if (event.date === iso) return true;
+      const start = new Date(`${event.date}T00:00:00`);
+      const day = new Date(`${iso}T00:00:00`);
+      if (Number.isNaN(start) || Number.isNaN(day)) return false;
+      if (event.recurring === "Daily") return true;
+      if (event.recurring === "Weekly") return start.getDay() === day.getDay();
+      if (event.recurring === "Monthly") return start.getDate() === day.getDate();
+      return false;
+    }
+    function recurringInMonth(event, month){
+      if (!event.recurring || !event.date || event.date.slice(0,7) > month) return false;
+      const [year, monthNumber] = month.split("-").map(Number);
+      const days = new Date(year, monthNumber, 0).getDate();
+      return Array.from({length:days},(_,i)=>`${month}-${String(i+1).padStart(2,"0")}`).some(iso => eventOccursOn(event, iso));
+    }
+    function age(birthday){
+      const b = new Date(birthday); if (Number.isNaN(b)) return "Age not set";
+      const n = new Date(); let months = (n.getFullYear()-b.getFullYear())*12 + n.getMonth()-b.getMonth(); if (n.getDate()<b.getDate()) months--;
+      months = Math.max(0, months); const y = Math.floor(months/12); return y ? `${y} yr ${months%12} mo old` : `${months} months old`;
+    }
+    function ageMonths(birthday){ const b = new Date(birthday); if (Number.isNaN(b)) return 36; const n = new Date(); return Math.max(0, (n.getFullYear()-b.getFullYear())*12+n.getMonth()-b.getMonth()); }
+    function averageMonths(){ return state.kids.length ? state.kids.reduce((a,k)=>a+ageMonths(k.birthday),0)/state.kids.length : 36; }
+    function groupTargetForSelectedKid(){
+      const childName = state.food.find(f => f.date === today() && f.child)?.child;
+      const kid = state.kids.find(k => k.name === childName) || state.kids[0];
+      const months = kid ? ageMonths(kid.birthday) : 36;
+      if (months < 12) return foodTargets.baby;
+      if (months < 48) return foodTargets.toddler;
+      return foodTargets.child;
+    }
+    function recipeIdeas(todaysFood, target, actual){
+      const hour = new Date().getHours();
+      const gap = foodGroups.filter(([key]) => (actual[key]||0) < (target[key]||0)).map(([key,label]) => key);
+      const daySeed = new Date().toISOString().slice(0,10).split("-").reduce((n,x)=>n+(+x),0);
+      const baby = target.label === "Baby";
+      const bank = baby ? [
+        ["Soft banana oat mash","Good for fruit/grain gaps; serve texture appropriate for age."],
+        ["Avocado yogurt swirl","Adds fats and dairy-style nutrition where appropriate."],
+        ["Lentil veggie puree","A gentle protein and vegetable option for babies already eating solids."]
+      ] : [
+        ["Banana pancakes","Good for fruit and grain gaps; add yogurt if dairy is low."],
+        ["Veggie egg muffins","Helps with vegetables and protein, easy for snacks or lunch."],
+        ["Turkey or lentil pasta","Family-friendly dinner with protein, grains, and vegetables."],
+        ["Greek yogurt berry bowl","Quick snack for dairy and fruit."],
+        ["Hummus toast strips","Simple protein/grain snack with soft vegetables on the side."],
+        ["Mini quesadilla with avocado","Good for grains, dairy, fats, and protein."]
+      ];
+      const picked = bank.slice(daySeed % bank.length).concat(bank).slice(0,3);
+      const time = hour < 11 ? "Breakfast idea" : hour < 15 ? "Lunch/snack idea" : "Dinner idea";
+      return picked.map((r,i) => [i===0 ? time + ": " + r[0] : r[0], `${r[1]} Today's gaps: ${gap.length ? gap.join(", ") : "mostly on track"}.`]);
+    }
+    async function fetchWeather(){
+      try {
+        const res = await fetch(WEATHER);
+        const data = await res.json();
+        state.weather = {temperature: Math.round(data.current.temperature_2m), precipitation: data.current.precipitation, code: data.current.weather_code, wind: Math.round(data.current.wind_speed_10m)};
+        save();
+      } catch { state.weather ||= {temperature:null, precipitation:0, code:null, wind:null}; }
+      renderWeather(); renderIdeas("#homeIdeas"); renderIdeas("#kidIdeas");
+    }
+    function renderWeather(){
+      const w = state.weather;
+      if (!w || w.temperature === null) { $("#weatherBadge").textContent = "--"; $("#weatherTemp").textContent = "Weather unavailable"; $("#weatherText").textContent = "Using indoor-friendly ideas"; return; }
+      const wet = Number(w.precipitation || 0) > 0;
+      $("#weatherBadge").textContent = wet ? "Rain" : w.temperature < -5 ? "Cold" : w.temperature > 28 ? "Hot" : "Ok";
+      $("#weatherTemp").textContent = `${w.temperature} C`;
+      $("#weatherText").textContent = `${wet ? "Wet" : "Current"} conditions, wind ${w.wind} km/h`;
+    }
+    function openDialog(type){
+      const fields = {
+        kid:[["name","Name","text"],["birthday","Birthday","date"]],
+        note:[["title","Title","text"],["date","Date","date"],["text","Note","textarea"]],
+        food:[["child","Child","kidselect"],["date","Date","date"],["type","Type","foodtype"],["food","Food or milk","text"],["amount","Amount","text"],["fruit","Fruit servings","number"],["vegetables","Vegetable servings","number"],["grains","Grain servings","number"],["proteinFood","Protein servings","number"],["dairy","Dairy / milk / formula servings","number"],["fats","Fat servings","number"],["water","Water servings/cups","number"],["protein","Protein g","number"],["carbs","Carbs g","number"],["fat","Fat g","number"],["calories","Calories","number"]],
+        event:[["title","Title","text"],["date","Date","date"],["time","Time","time"],["type","Type","text"],["recurring","Recurring","recurring"],["notes","Notes","textarea"]],
+        growth:[["child","Child","kidselect"],["date","Date","date"],["weight","Weight","text"],["height","Height / size","text"],["notes","Notes","textarea"]],
+        appointment:[["child","Child","kidselect"],["title","Title","text"],["date","Date","date"],["time","Time","time"],["notes","Notes","textarea"]]
+      };
+      $("#dialog").dataset.type = type;
+      $("#dialogTitle").textContent = `Add ${type}`;
+      $("#dialogFields").innerHTML = fields[type].map(([n,l,t]) => field(n,l,t)).join("");
+      $("#dialog").showModal();
+    }
+    function field(name,label,type){
+      const v = ["date","birthday"].includes(name) ? today() : "";
+      if (type === "textarea") return `<label class="field"><span>${label}</span><textarea name="${name}"></textarea></label>`;
+      if (type === "kidselect") return `<label class="field"><span>${label}</span><select name="${name}"><option value="">All kids</option>${state.kids.map(k=>`<option>${esc(k.name)}</option>`).join("")}</select></label>`;
+      if (type === "foodtype") return `<label class="field"><span>${label}</span><select name="${name}"><option>Food</option><option>Breast milk</option><option>Formula</option><option>Snack</option><option>Water</option></select></label>`;
+      if (type === "recurring") return `<label class="field"><span>${label}</span><select name="${name}"><option value="">None</option><option>Daily</option><option>Weekly</option><option>Monthly</option></select></label>`;
+      return `<label class="field"><span>${label}</span><input name="${name}" type="${type}" value="${v}"></label>`;
+    }
+    function saveDialog(form){
+      const type = $("#dialog").dataset.type;
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (type === "kid") state.kids.push({id:id(), name:data.name||"New child", birthday:data.birthday||today(), weight:"", height:"", health:"", care:"", activities:"", learning:"", needs:[]});
+      if (type === "note") state.notes.unshift({id:id(), title:data.title||"Reminder", date:data.date||today(), text:data.text||"", done:false});
+      if (type === "food") state.food.unshift({id:id(), ...data});
+      if (type === "event") state.events.push({id:id(), ...data});
+      if (type === "growth") state.growth.unshift({id:id(), ...data});
+      if (type === "appointment") state.appointments.unshift({id:id(), ...data});
+      save(); render();
+    }
+    document.addEventListener("click", e => {
+      let changed = false;
+      const tab = e.target.closest("[data-tab]");
+      if (tab) {
+        state.active = tab.dataset.tab;
+        save();
+        renderTabs();
+        return;
+      }
+      const open = e.target.closest("[data-open]");
+      if (open) {
+        openDialog(open.dataset.open);
+        return;
+      }
+      const theme = e.target.closest("[data-theme]");
+      if (theme) {
+        state.settings.theme = theme.dataset.theme;
+        changed = true;
+      }
+      const tabMove = e.target.closest("[data-tab-move]");
+      if (tabMove) {
+        const [key, dir] = tabMove.dataset.tabMove.split(":");
+        const order = state.settings.tabOrder || tabs.map(([k])=>k);
+        const current = order.indexOf(key);
+        const swap = dir === "up" ? current - 1 : current + 1;
+        const settingsIndex = order.indexOf("settings");
+        if (current > -1 && swap > -1 && (settingsIndex === -1 || swap < settingsIndex)) {
+          const item = order.splice(current, 1)[0];
+          order.splice(swap, 0, item);
+          state.settings.tabOrder = order;
+          changed = true;
+        }
+      }
+      const delKid = e.target.closest("[data-del-kid]");
+      if (delKid) {
+        state.kids = state.kids.filter(k=>k.id!==delKid.dataset.delKid);
+        changed = true;
+      }
+      const delNote = e.target.closest("[data-del-note]");
+      if (delNote) {
+        state.notes = state.notes.filter(n=>n.id!==delNote.dataset.delNote);
+        changed = true;
+      }
+      const delFood = e.target.closest("[data-del-food]");
+      if (delFood) {
+        state.food = state.food.filter(f=>f.id!==delFood.dataset.delFood);
+        changed = true;
+      }
+      const milestone = e.target.closest("[data-milestone]");
+      if (milestone) {
+        state.milestones[milestone.dataset.milestone] = milestone.dataset.status;
+        changed = true;
+      }
+      const delGrowth = e.target.closest("[data-del-growth]");
+      if (delGrowth) {
+        state.growth = state.growth.filter(g=>g.id!==delGrowth.dataset.delGrowth);
+        changed = true;
+      }
+      const delAppointment = e.target.closest("[data-del-appointment]");
+      if (delAppointment) {
+        state.appointments = state.appointments.filter(a=>a.id!==delAppointment.dataset.delAppointment);
+        changed = true;
+      }
+      const delEvent = e.target.closest("[data-del-event]");
+      if (delEvent) {
+        state.events = state.events.filter(ev=>ev.id!==delEvent.dataset.delEvent);
+        changed = true;
+      }
+      const delNeed = e.target.closest("[data-del-need]");
+      if (delNeed) {
+        const [kidId, needId] = delNeed.dataset.delNeed.split(":");
+        const k = state.kids.find(x=>x.id===kidId);
+        if (k) k.needs = k.needs.filter(n=>n.id!==needId);
+        changed = true;
+      }
+      const addNeed = e.target.closest("[data-add-need]");
+      if (addNeed) {
+        const text = prompt("Need to track");
+        const k = state.kids.find(x=>x.id===addNeed.dataset.addNeed);
+        if (text && k) {
+          k.needs.push({id:id(), text, done:false});
+          changed = true;
+        }
+      }
+      if (e.target.id === "prevMonth" || e.target.id === "nextMonth") {
+        const [y,m] = state.month.split("-").map(Number);
+        const d = new Date(y, m-1 + (e.target.id==="nextMonth"?1:-1), 1);
+        state.month = d.toISOString().slice(0,7);
+        changed = true;
+      }
+      if (e.target.id === "refreshWeather") {
+        fetchWeather();
+        return;
+      }
+      if (e.target.id === "prevPhoto" && state.photos.length) {
+        state.photoIndex = (state.photoIndex - 1 + state.photos.length) % state.photos.length;
+        changed = true;
+      }
+      if (e.target.id === "nextPhoto" && state.photos.length) {
+        state.photoIndex = (state.photoIndex + 1) % state.photos.length;
+        changed = true;
+      }
+      if (e.target.id === "moveMode") {
+        const on = !$("#homeGrid").classList.contains("dragging");
+        $("#homeGrid").classList.toggle("dragging", on);
+        e.target.textContent = on ? "Done" : "Move";
+        $$(".move-card").forEach(c => c.draggable = on);
+        return;
+      }
+      if (changed) {
+        save();
+        render();
+      }
+    });
+    document.addEventListener("input", e => {
+      let rerender = false;
+      if (e.target.dataset.kid) {
+        const [kidId, field] = e.target.dataset.kid.split(":");
+        const k = state.kids.find(x=>x.id===kidId);
+        if (k) k[field] = e.target.value;
+      }
+      if (e.target.dataset.note) {
+        const [noteId, field] = e.target.dataset.note.split(":");
+        const n = state.notes.find(x=>x.id===noteId);
+        if (n) n[field] = e.target.value;
+      }
+      if (e.target.dataset.tabToggle) {
+        state.settings.tabs[e.target.dataset.tabToggle] = e.target.checked;
+        rerender = true;
+      }
+      if (e.target.dataset.setting) {
+        const key = e.target.dataset.setting;
+        const value = e.target.type === "range" ? +e.target.value : e.target.value;
+        state.settings[key] = value;
+        rerender = true;
+      }
+      if (e.target.dataset.settingCheck) {
+        state.settings[e.target.dataset.settingCheck] = e.target.checked;
+        rerender = true;
+      }
+      if (e.target.id === "fontSize") {
+        state.settings.fontSize = +e.target.value;
+        rerender = true;
+      }
+      if (e.target.id === "calendarMode") {
+        state.mode = e.target.value;
+        rerender = true;
+      }
+      save();
+      if (rerender) render();
+    });
+    document.addEventListener("change", e => {
+      if (e.target.dataset.need) { const [kidId, needId] = e.target.dataset.need.split(":"); const k = state.kids.find(x=>x.id===kidId); const n = k?.needs.find(x=>x.id===needId); if (n) n.done = e.target.checked; }
+      if (e.target.dataset.noteDone) { const n = state.notes.find(x=>x.id===e.target.dataset.noteDone); if (n) n.done = e.target.checked; }
+      if (e.target.id === "photoInput") [...e.target.files].forEach(file => { const r = new FileReader(); r.onload = () => { state.photos.push(r.result); state.photoIndex = state.photos.length - 1; save(); renderHome(); }; r.readAsDataURL(file); });
+      save(); render();
+    });
+    $("#dialog").querySelector("form").addEventListener("submit", e => { if (e.submitter?.value === "save") saveDialog(e.currentTarget); });
+    $("#homeGrid").addEventListener("dragstart", e => dragCard = e.target.closest(".move-card"));
+    $("#homeGrid").addEventListener("dragover", e => { e.preventDefault(); const over = e.target.closest(".move-card"); if (!dragCard || !over || dragCard === over) return; const cards = $$(".move-card"); $("#homeGrid").insertBefore(dragCard, cards.indexOf(dragCard) < cards.indexOf(over) ? over.nextSibling : over); });
+    $("#homeGrid").addEventListener("dragend", () => { state.settings.order = $$(".move-card").map(c=>c.dataset.panel); dragCard = null; save(); });
+    render(); renderWeather(); fetchWeather();
+  </script>
+</body>
+</html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Days</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --card: #ffffff;
+      --soft: #edf7f4;
+      --text: #22302d;
+      --muted: #6d7c77;
+      --line: #dbe3de;
+      --brand: #2f8f83;
+      --brand-2: #f28b6d;
+      --accent: #3b76af;
+      --danger: #b84b4b;
+      --shadow: 0 12px 30px rgba(34, 48, 45, .12);
+      --font-size: 16px;
     }
     * { box-sizing: border-box; }
     body {
