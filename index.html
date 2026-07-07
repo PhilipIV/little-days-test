@@ -206,7 +206,22 @@
       gap: 8px;
       z-index: 2;
     }
+    .photo-actions { flex-wrap: wrap; }
     .photo-actions input { display: none; }
+    .photo-status {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      z-index: 2;
+      max-width: calc(100% - 24px);
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: var(--radius);
+      padding: 6px 9px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 800;
+    }
     .calendar-tools {
       display: flex;
       align-items: center;
@@ -254,6 +269,8 @@
     }
     .swatch.active { border-color: var(--text); }
     .swatch span { display: block; height: 18px; width: 72px; border-radius: 999px; }
+    .color-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .color-grid input[type="color"] { min-height: 44px; padding: 4px; }
     .setting-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .segmented { display: flex; flex-wrap: wrap; gap: 8px; }
     .segmented button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
@@ -299,10 +316,13 @@
             </div>
             <div class="hero" id="hero">
               <div class="photo-actions">
-                <label class="btn ghost">Add photos<input id="photoInput" type="file" accept="image/*" multiple></label>
+                <label class="btn ghost">Photo library<input id="photoLibraryInput" type="file" accept="image/*,.heic,.heif" multiple></label>
+                <label class="btn ghost">Files<input id="photoFileInput" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></label>
+                <label class="btn ghost">Camera<input id="photoCameraInput" type="file" accept="image/*" capture="environment"></label>
                 <button class="btn ghost" id="prevPhoto" type="button">Prev</button>
                 <button class="btn ghost" id="nextPhoto" type="button">Next</button>
               </div>
+              <div class="photo-status" id="photoStatus">No photos saved yet</div>
               <div class="hero-caption">
                 <h2>Today at a glance</h2>
                 <p class="muted">Care, meals, learning, activities, and appointments in one place.</p>
@@ -385,6 +405,10 @@
             <div class="swatches" id="themes"></div>
             <div class="stack">
               <label class="field"><span>Font size</span><input id="fontSize" type="range" min="14" max="20" step="1"></label>
+              <div>
+                <p class="setting-note">Choose Custom, then adjust any part of the palette.</p>
+                <div class="color-grid" id="customColors"></div>
+              </div>
             </div>
           </article>
           <article class="card">
@@ -419,8 +443,12 @@
       meadow: ["Meadow","#f6f3ee","#ffffff","#edf7f4","#22302d","#2f8f83","#f28b6d","#3b76af"],
       sky: ["Sky","#f2f7fb","#ffffff","#e7f0f8","#1f3140","#3178b9","#71a86d","#d56f5d"],
       berry: ["Berry","#fbf4f6","#ffffff","#f6e7ec","#352831","#a33e67","#4b927f","#d28a3f"],
-      graphite: ["Graphite","#f4f5f3","#ffffff","#e8ebe6","#252923","#5c735c","#bd7258","#4c7394"]
+      graphite: ["Graphite","#f4f5f3","#ffffff","#e8ebe6","#252923","#5c735c","#bd7258","#4c7394"],
+      custom: ["Custom","#f6f3ee","#ffffff","#edf7f4","#22302d","#2f8f83","#f28b6d","#3b76af"]
     };
+    const colorLabels = [
+      ["bg","App background"],["card","Cards"],["soft","Soft panels"],["text","Main text"],["brand","Primary buttons"],["brand2","Secondary accent"],["accent","Weather/chart accent"],["danger","Remove/danger"]
+    ];
     const macroGuide = [
       ["0-6 months","Breast milk/formula on demand","Milk is primary source","High fat needs for growth","Ask a pediatric provider before changing feeding plans."],
       ["7-12 months","11 g/day","95 g/day","30 g/day","Use iron-rich foods with breast milk/formula."],
@@ -481,7 +509,8 @@
       photoIndex:0,
       photos:[],
       settings:{
-        theme:"meadow", fontSize:16, density:"comfortable", cardShape:"soft", shadow:"soft", fontStyle:"friendly", tabStyle:"pills", contrast:"normal", accents:"on",
+        theme:"meadow", customColors:{bg:"#f6f3ee",card:"#ffffff",soft:"#edf7f4",text:"#22302d",brand:"#2f8f83",brand2:"#f28b6d",accent:"#3b76af",danger:"#b84b4b"},
+        fontSize:16, density:"comfortable", cardShape:"soft", shadow:"soft", fontStyle:"friendly", tabStyle:"pills", contrast:"normal", accents:"on",
         homeLayout:"balanced", detailLevel:"full", chartStyle:"both", showCompleted:true, homeNoteLimit:4, foodLogLimit:10, recipeCount:3, photoHeight:320, pageWidth:"wide",
         tabs:{home:true,kids:true,milestones:true,notes:true,health:true,food:true,calendar:true,settings:true},
         tabOrder:["home","kids","milestones","notes","health","food","calendar","settings"],
@@ -497,6 +526,8 @@
     };
     let state = load();
     let dragCard = null;
+    let photoToken = 0;
+    let photoDbPromise = null;
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
     function id(){ return Math.random().toString(36).slice(2,10); }
@@ -506,14 +537,123 @@
       try {
         const saved = JSON.parse(localStorage.getItem(KEY));
         if (!saved) return structuredClone(defaultState);
-        return {...structuredClone(defaultState), ...saved, settings:{...defaultState.settings,...saved.settings,tabs:{...defaultState.settings.tabs,...(saved.settings?.tabs||{})}}};
+        return {...structuredClone(defaultState), ...saved, settings:{...defaultState.settings,...saved.settings,customColors:{...defaultState.settings.customColors,...(saved.settings?.customColors||{})},tabs:{...defaultState.settings.tabs,...(saved.settings?.tabs||{})}}};
       } catch { return structuredClone(defaultState); }
     }
-    function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+    function save(){
+      try { localStorage.setItem(KEY, JSON.stringify(state)); }
+      catch {
+        state.photos = state.photos.filter(p => !String(p).startsWith("data:"));
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }
+    }
+    function openPhotoDb(){
+      if (photoDbPromise) return photoDbPromise;
+      photoDbPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open("littleDays.photos", 1);
+        request.onupgradeneeded = () => request.result.createObjectStore("photos", {keyPath:"id"});
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return photoDbPromise;
+    }
+    async function savePhotoRecord(record){
+      const db = await openPhotoDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("photos", "readwrite");
+        tx.objectStore("photos").put(record);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    async function getPhotoRecord(photoId){
+      const db = await openPhotoDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("photos", "readonly");
+        const request = tx.objectStore("photos").get(photoId);
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    function readFileAsDataUrl(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+    function loadImage(src){
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+    async function resizePhoto(file){
+      const original = await readFileAsDataUrl(file);
+      try {
+        const img = await loadImage(original);
+        const max = 1600;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        return canvas.toDataURL("image/jpeg", .82);
+      } catch {
+        return original;
+      }
+    }
+    async function addPhotoFiles(files){
+      const list = [...files].filter(f => f && (f.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name || "")));
+      if (!list.length) return;
+      $("#photoStatus").textContent = `Saving ${list.length} photo${list.length===1?"":"s"}...`;
+      let savedCount = 0;
+      for (const file of list) {
+        try {
+          const photoId = id();
+          const data = await resizePhoto(file);
+          await savePhotoRecord({id:photoId, data, name:file.name || "Photo", type:file.type || "image", savedAt:new Date().toISOString()});
+          state.photos.push(photoId);
+          state.photoIndex = state.photos.length - 1;
+          savedCount++;
+        } catch {
+          $("#photoStatus").textContent = "A photo could not be saved. Try Files instead of Photo Library.";
+        }
+      }
+      save();
+      renderHome();
+      if (savedCount) $("#photoStatus").textContent = `${state.photos.length} photo${state.photos.length===1?"":"s"} saved`;
+    }
+    async function photoSrc(ref){
+      if (!ref) return "";
+      if (String(ref).startsWith("data:")) return ref;
+      const record = await getPhotoRecord(ref);
+      return record?.data || "";
+    }
+    async function migrateLegacyPhotos(){
+      if (!state.photos.some(p => String(p).startsWith("data:"))) return;
+      const migrated = [];
+      for (const ref of state.photos) {
+        if (!String(ref).startsWith("data:")) { migrated.push(ref); continue; }
+        const photoId = id();
+        await savePhotoRecord({id:photoId, data:ref, name:"Migrated photo", type:"image", savedAt:new Date().toISOString()});
+        migrated.push(photoId);
+      }
+      state.photos = migrated;
+      save();
+      renderHome();
+    }
     function applyTheme(){
-      const t = themes[state.settings.theme] || themes.meadow;
+      const custom = state.settings.customColors || defaultState.settings.customColors;
+      const t = state.settings.theme === "custom" ? ["Custom",custom.bg,custom.card,custom.soft,custom.text,custom.brand,custom.brand2,custom.accent] : (themes[state.settings.theme] || themes.meadow);
       const names = ["--bg","--card","--soft","--text","--brand","--brand-2","--accent"];
       [t[1],t[2],t[3],t[4],t[5],t[6],t[7]].forEach((v,i)=>document.documentElement.style.setProperty(names[i],v));
+      document.documentElement.style.setProperty("--danger", custom.danger || "#b84b4b");
       document.documentElement.style.setProperty("--font-size", state.settings.fontSize + "px");
       const density = {
         compact:{pad:12,gap:10,control:36},
@@ -564,16 +704,25 @@
       state.settings.order.forEach(p => { const el = $(`[data-panel="${p}"]`); if (el) $("#homeGrid").append(el); });
       const hero = $("#hero");
       hero.querySelectorAll("img").forEach(i => i.remove());
-      if (state.photos.length) {
-        const img = new Image();
-        img.src = state.photos[state.photoIndex % state.photos.length];
-        hero.prepend(img);
-      }
+      renderPhoto();
+      $("#photoStatus").textContent = state.photos.length ? `${state.photos.length} photo${state.photos.length===1?"":"s"} saved` : "No photos saved yet";
       const needs = state.kids.flatMap(k => k.needs.map(n => ({kid:k.name, ...n, kidId:k.id}))).filter(n => state.settings.showCompleted || !n.done);
       $("#homeNeeds").innerHTML = needs.map(n => `<label class="item row"><span><strong>${esc(n.kid)}</strong>: ${esc(n.text)}</span><input type="checkbox" data-need="${n.kidId}:${n.id}" ${n.done?'checked':''}></label>`).join("") || `<p class="muted">No needs yet.</p>`;
       const notes = state.notes.filter(n => state.settings.showCompleted || !n.done).slice(0, +(state.settings.homeNoteLimit || 4));
       $("#homeNotes").innerHTML = notes.map(n => `<label class="item row"><span><strong>${esc(n.title)}</strong><br><span class="muted optional-detail">${esc(n.text)}</span></span><input type="checkbox" data-note-done="${n.id}" ${n.done?'checked':''}></label>`).join("") || `<p class="muted">No notes yet.</p>`;
       renderIdeas("#homeIdeas");
+    }
+    async function renderPhoto(){
+      const token = ++photoToken;
+      const hero = $("#hero");
+      if (!state.photos.length) return;
+      const ref = state.photos[state.photoIndex % state.photos.length];
+      const src = await photoSrc(ref);
+      if (token !== photoToken || !src) return;
+      hero.querySelectorAll("img").forEach(i => i.remove());
+      const img = new Image();
+      img.src = src;
+      hero.prepend(img);
     }
     function renderKids(){
       $("#kidList").innerHTML = state.kids.map(k => `<article class="card">
@@ -686,6 +835,7 @@
     function renderSettings(){
       $("#fontSize").value = state.settings.fontSize;
       $("#themes").innerHTML = Object.entries(themes).map(([k,t]) => `<button class="swatch ${state.settings.theme===k?'active':''}" data-theme="${k}" type="button"><span style="background:linear-gradient(90deg,${t[5]},${t[6]},${t[7]})"></span><strong>${t[0]}</strong></button>`).join("");
+      $("#customColors").innerHTML = colorLabels.map(([key,label]) => `<label class="field"><span>${label}</span><input type="color" data-color="${key}" value="${esc(state.settings.customColors[key])}"></label>`).join("");
       $("#presentationSettings").innerHTML = [
         selectSetting("density","Spacing",[["compact","Compact"],["comfortable","Comfortable"],["roomy","Roomy"]]),
         selectSetting("cardShape","Card shape",[["square","Square"],["soft","Soft"],["round","Round"]]),
@@ -968,6 +1118,11 @@
         state.settings[e.target.dataset.settingCheck] = e.target.checked;
         rerender = true;
       }
+      if (e.target.dataset.color) {
+        state.settings.theme = "custom";
+        state.settings.customColors[e.target.dataset.color] = e.target.value;
+        rerender = true;
+      }
       if (e.target.id === "fontSize") {
         state.settings.fontSize = +e.target.value;
         rerender = true;
@@ -982,14 +1137,18 @@
     document.addEventListener("change", e => {
       if (e.target.dataset.need) { const [kidId, needId] = e.target.dataset.need.split(":"); const k = state.kids.find(x=>x.id===kidId); const n = k?.needs.find(x=>x.id===needId); if (n) n.done = e.target.checked; }
       if (e.target.dataset.noteDone) { const n = state.notes.find(x=>x.id===e.target.dataset.noteDone); if (n) n.done = e.target.checked; }
-      if (e.target.id === "photoInput") [...e.target.files].forEach(file => { const r = new FileReader(); r.onload = () => { state.photos.push(r.result); state.photoIndex = state.photos.length - 1; save(); renderHome(); }; r.readAsDataURL(file); });
+      if (["photoLibraryInput","photoFileInput","photoCameraInput"].includes(e.target.id)) {
+        addPhotoFiles(e.target.files);
+        e.target.value = "";
+        return;
+      }
       save(); render();
     });
     $("#dialog").querySelector("form").addEventListener("submit", e => { if (e.submitter?.value === "save") saveDialog(e.currentTarget); });
     $("#homeGrid").addEventListener("dragstart", e => dragCard = e.target.closest(".move-card"));
     $("#homeGrid").addEventListener("dragover", e => { e.preventDefault(); const over = e.target.closest(".move-card"); if (!dragCard || !over || dragCard === over) return; const cards = $$(".move-card"); $("#homeGrid").insertBefore(dragCard, cards.indexOf(dragCard) < cards.indexOf(over) ? over.nextSibling : over); });
     $("#homeGrid").addEventListener("dragend", () => { state.settings.order = $$(".move-card").map(c=>c.dataset.panel); dragCard = null; save(); });
-    render(); renderWeather(); fetchWeather();
+    render(); renderWeather(); migrateLegacyPhotos().finally(fetchWeather);
   </script>
 </body>
 </html>
