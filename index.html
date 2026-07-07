@@ -573,29 +573,116 @@
       save(); render();
     }
     document.addEventListener("click", e => {
-      const tab = e.target.closest("[data-tab]"); if (tab) { state.active = tab.dataset.tab; save(); renderTabs(); }
-      const open = e.target.closest("[data-open]"); if (open) openDialog(open.dataset.open);
-      const theme = e.target.closest("[data-theme]"); if (theme) { state.settings.theme = theme.dataset.theme; save(); render(); }
-      const delKid = e.target.closest("[data-del-kid]"); if (delKid) state.kids = state.kids.filter(k=>k.id!==delKid.dataset.delKid);
-      const delNote = e.target.closest("[data-del-note]"); if (delNote) state.notes = state.notes.filter(n=>n.id!==delNote.dataset.delNote);
-      const delFood = e.target.closest("[data-del-food]"); if (delFood) state.food = state.food.filter(f=>f.id!==delFood.dataset.delFood);
-      const delEvent = e.target.closest("[data-del-event]"); if (delEvent) state.events = state.events.filter(ev=>ev.id!==delEvent.dataset.delEvent);
-      const delNeed = e.target.closest("[data-del-need]"); if (delNeed) { const [kidId, needId] = delNeed.dataset.delNeed.split(":"); const k = state.kids.find(x=>x.id===kidId); if (k) k.needs = k.needs.filter(n=>n.id!==needId); }
-      const addNeed = e.target.closest("[data-add-need]"); if (addNeed) { const text = prompt("Need to track"); const k = state.kids.find(x=>x.id===addNeed.dataset.addNeed); if (text && k) k.needs.push({id:id(), text, done:false}); }
-      if (e.target.id === "prevMonth" || e.target.id === "nextMonth") { const [y,m] = state.month.split("-").map(Number); const d = new Date(y, m-1 + (e.target.id==="nextMonth"?1:-1), 1); state.month = d.toISOString().slice(0,7); }
-      if (e.target.id === "refreshWeather") fetchWeather();
-      if (e.target.id === "prevPhoto" && state.photos.length) state.photoIndex = (state.photoIndex - 1 + state.photos.length) % state.photos.length;
-      if (e.target.id === "nextPhoto" && state.photos.length) state.photoIndex = (state.photoIndex + 1) % state.photos.length;
-      if (e.target.id === "moveMode") { const on = !$("#homeGrid").classList.contains("dragging"); $("#homeGrid").classList.toggle("dragging", on); e.target.textContent = on ? "Done" : "Move"; $$(".move-card").forEach(c => c.draggable = on); }
-      save(); render();
+      let changed = false;
+      const tab = e.target.closest("[data-tab]");
+      if (tab) {
+        state.active = tab.dataset.tab;
+        save();
+        renderTabs();
+        return;
+      }
+      const open = e.target.closest("[data-open]");
+      if (open) {
+        openDialog(open.dataset.open);
+        return;
+      }
+      const theme = e.target.closest("[data-theme]");
+      if (theme) {
+        state.settings.theme = theme.dataset.theme;
+        changed = true;
+      }
+      const delKid = e.target.closest("[data-del-kid]");
+      if (delKid) {
+        state.kids = state.kids.filter(k=>k.id!==delKid.dataset.delKid);
+        changed = true;
+      }
+      const delNote = e.target.closest("[data-del-note]");
+      if (delNote) {
+        state.notes = state.notes.filter(n=>n.id!==delNote.dataset.delNote);
+        changed = true;
+      }
+      const delFood = e.target.closest("[data-del-food]");
+      if (delFood) {
+        state.food = state.food.filter(f=>f.id!==delFood.dataset.delFood);
+        changed = true;
+      }
+      const delEvent = e.target.closest("[data-del-event]");
+      if (delEvent) {
+        state.events = state.events.filter(ev=>ev.id!==delEvent.dataset.delEvent);
+        changed = true;
+      }
+      const delNeed = e.target.closest("[data-del-need]");
+      if (delNeed) {
+        const [kidId, needId] = delNeed.dataset.delNeed.split(":");
+        const k = state.kids.find(x=>x.id===kidId);
+        if (k) k.needs = k.needs.filter(n=>n.id!==needId);
+        changed = true;
+      }
+      const addNeed = e.target.closest("[data-add-need]");
+      if (addNeed) {
+        const text = prompt("Need to track");
+        const k = state.kids.find(x=>x.id===addNeed.dataset.addNeed);
+        if (text && k) {
+          k.needs.push({id:id(), text, done:false});
+          changed = true;
+        }
+      }
+      if (e.target.id === "prevMonth" || e.target.id === "nextMonth") {
+        const [y,m] = state.month.split("-").map(Number);
+        const d = new Date(y, m-1 + (e.target.id==="nextMonth"?1:-1), 1);
+        state.month = d.toISOString().slice(0,7);
+        changed = true;
+      }
+      if (e.target.id === "refreshWeather") {
+        fetchWeather();
+        return;
+      }
+      if (e.target.id === "prevPhoto" && state.photos.length) {
+        state.photoIndex = (state.photoIndex - 1 + state.photos.length) % state.photos.length;
+        changed = true;
+      }
+      if (e.target.id === "nextPhoto" && state.photos.length) {
+        state.photoIndex = (state.photoIndex + 1) % state.photos.length;
+        changed = true;
+      }
+      if (e.target.id === "moveMode") {
+        const on = !$("#homeGrid").classList.contains("dragging");
+        $("#homeGrid").classList.toggle("dragging", on);
+        e.target.textContent = on ? "Done" : "Move";
+        $$(".move-card").forEach(c => c.draggable = on);
+        return;
+      }
+      if (changed) {
+        save();
+        render();
+      }
     });
     document.addEventListener("input", e => {
-      if (e.target.dataset.kid) { const [kidId, field] = e.target.dataset.kid.split(":"); const k = state.kids.find(x=>x.id===kidId); if (k) k[field] = e.target.value; }
-      if (e.target.dataset.note) { const [noteId, field] = e.target.dataset.note.split(":"); const n = state.notes.find(x=>x.id===noteId); if (n) n[field] = e.target.value; }
-      if (e.target.dataset.tabToggle) state.settings.tabs[e.target.dataset.tabToggle] = e.target.checked;
-      if (e.target.id === "fontSize") state.settings.fontSize = +e.target.value;
-      if (e.target.id === "calendarMode") state.mode = e.target.value;
-      save(); render();
+      let rerender = false;
+      if (e.target.dataset.kid) {
+        const [kidId, field] = e.target.dataset.kid.split(":");
+        const k = state.kids.find(x=>x.id===kidId);
+        if (k) k[field] = e.target.value;
+      }
+      if (e.target.dataset.note) {
+        const [noteId, field] = e.target.dataset.note.split(":");
+        const n = state.notes.find(x=>x.id===noteId);
+        if (n) n[field] = e.target.value;
+      }
+      if (e.target.dataset.tabToggle) {
+        state.settings.tabs[e.target.dataset.tabToggle] = e.target.checked;
+        rerender = true;
+      }
+      if (e.target.id === "fontSize") {
+        state.settings.fontSize = +e.target.value;
+        rerender = true;
+      }
+      if (e.target.id === "calendarMode") {
+        state.mode = e.target.value;
+        rerender = true;
+      }
+      save();
+      if (rerender) render();
     });
     document.addEventListener("change", e => {
       if (e.target.dataset.need) { const [kidId, needId] = e.target.dataset.need.split(":"); const k = state.kids.find(x=>x.id===kidId); const n = k?.needs.find(x=>x.id===needId); if (n) n.done = e.target.checked; }
